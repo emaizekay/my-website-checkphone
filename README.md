@@ -1,3 +1,3 @@
 # my-website-checkphone
 ตรวจสอบความสมบูรณ์ภายในของอุปกรณ์
-อ้างอิงจาก Remobie และ CompAsia
+อ้างอิงจาก Remobie และ Trade IN+
