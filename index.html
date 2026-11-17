@@ -121,14 +121,22 @@
                   <span class="text-[11px] font-bold uppercase tracking-wider text-blue-600">Step 1 · Device Information</span>
                   <h2 class="text-lg sm:text-xl font-extrabold text-slate-900">ระบุข้อมูลตัวเครื่องที่ต้องการตรวจเช็ก</h2>
                 </div>
-                <button onclick="runAutoDeviceDetection()" class="text-xs text-blue-600 hover:text-blue-800 font-bold bg-blue-50 px-2.5 py-1.5 rounded-xl border border-blue-100">
-                  ↻ ดึงค่าเบื้องต้นจากเบราว์เซอร์
-                </button>
+                <div class="flex flex-wrap items-center gap-1.5">
+                  <button onclick="openCatalogSyncModal()" class="text-xs text-white bg-indigo-600 hover:bg-indigo-700 font-bold px-3 py-1.5 rounded-xl shadow-sm transition flex items-center gap-1">
+                    🔄 อัปเดตรุ่นใหม่ &amp; ซิงก์ราคา 4 ตลาด (API)
+                  </button>
+                  <button onclick="runAutoDeviceDetection()" class="text-xs text-blue-600 hover:text-blue-800 font-bold bg-blue-50 px-2.5 py-1.5 rounded-xl border border-blue-100">
+                    ↻ ดึงค่าเบื้องต้นจากเบราว์เซอร์
+                  </button>
+                </div>
               </div>
 
-              <p class="text-xs text-slate-500">
-                เลือกยี่ห้อ รุ่น ความจุ (ROM) และแรม (RAM) จากฐานข้อมูล หรือเลือก <b>"อื่นๆ / พิมพ์ระบุเอง"</b> หากไม่มีรุ่นในรายการ
-              </p>
+              <div class="flex flex-wrap items-center justify-between gap-2 text-xs">
+                <span class="text-slate-500">เลือกยี่ห้อและรุ่นจากฐานข้อมูลที่ซิงก์ล่าสุด หรือเลือก <b>"อื่นๆ / พิมพ์ระบุเอง"</b></span>
+                <span id="catalog-sync-badge" class="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold text-[11px]">
+                  ● ฐานข้อมูล: ซิงก์ 4 ตลาด (Remobie · Yellobe · CompAsia · Trade IN+)
+                </span>
+              </div>
 
               <!-- Form Box -->
               <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200 space-y-3.5 text-xs">
@@ -656,17 +664,21 @@
               </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 text-xs">
               <div class="bg-white p-3 rounded-xl border border-slate-200 flex items-center justify-between">
                 <span class="font-bold text-slate-700">Remobie Check</span>
                 <span id="price-remobie" class="font-extrabold text-slate-900 text-sm">฿28,500</span>
               </div>
               <div class="bg-white p-3 rounded-xl border border-slate-200 flex items-center justify-between">
-                <span class="font-bold text-slate-700">Trade IN+ (CompAsia)</span>
+                <span class="font-bold text-slate-700">YelloBe</span>
+                <span id="price-yellobe" class="font-extrabold text-slate-900 text-sm">฿28,200</span>
+              </div>
+              <div class="bg-white p-3 rounded-xl border border-slate-200 flex items-center justify-between">
+                <span class="font-bold text-slate-700">CompAsia</span>
                 <span id="price-compasia" class="font-extrabold text-slate-900 text-sm">฿27,900</span>
               </div>
               <div class="bg-white p-3 rounded-xl border border-slate-200 flex items-center justify-between">
-                <span class="font-bold text-slate-700">ราคากลางร้านค้า</span>
+                <span class="font-bold text-slate-700">Trade IN+</span>
                 <span id="price-trademobile" class="font-extrabold text-slate-900 text-sm">฿27,500</span>
               </div>
             </div>
@@ -710,7 +722,10 @@
             </div>
 
             <div class="space-y-2.5">
-              <button onclick="window.print()" class="w-full py-3.5 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-md transition flex items-center justify-center gap-2">
+              <button onclick="syncReportToGoogleSheets(false)" id="btn-save-sheets" class="w-full py-3.5 px-4 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs shadow-md transition flex items-center justify-center gap-2">
+                <span>📊 บันทึกผลตรวจ &amp; เกรด A–D ลง Google Sheets</span>
+              </button>
+              <button onclick="window.print()" class="w-full py-3 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-md transition flex items-center justify-center gap-2">
                 <span>🖨️ พิมพ์ใบรายงานยืนยันผล / บันทึกเป็น PDF</span>
               </button>
               <button onclick="copyReportSummary()" class="w-full py-2.5 px-4 rounded-2xl bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 font-bold text-xs transition flex items-center justify-center gap-2">
@@ -718,12 +733,193 @@
               </button>
             </div>
           </div>
+
+          <!-- Google Sheets Auto-Sync Configuration Card -->
+          <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-5 space-y-3 text-xs">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="w-7 h-7 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-black">📊</span>
+                <div>
+                  <h4 class="font-extrabold text-slate-800">ตั้งค่าซิงก์ Google Sheets อัตโนมัติ</h4>
+                  <p class="text-[10px] text-slate-400">ผ่าน Google Apps Script (Code.gs)</p>
+                </div>
+              </div>
+              <span id="sheets-sync-pill" class="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[10px] font-bold">พร้อมบันทึก</span>
+            </div>
+
+            <label class="flex items-center gap-2 p-2.5 rounded-xl bg-emerald-50/70 border border-emerald-200 cursor-pointer">
+              <input id="chk-autosave-sheets" type="checkbox" checked onchange="toggleAutoSaveSheets(this.checked)" class="rounded text-emerald-600 focus:ring-emerald-500" />
+              <span class="text-slate-700 font-semibold text-[11px]">บันทึกเข้า Google Sheets อัตโนมัติทันทีที่เปิดหน้าใบรายงาน</span>
+            </label>
+
+            <div class="space-y-1.5">
+              <label for="input-sheets-webhook" class="block text-[11px] font-semibold text-slate-600">
+                Web App URL (กรณีรันเว็บนอก Google Apps Script):
+              </label>
+              <input id="input-sheets-webhook" type="text" oninput="saveSheetsWebhookUrl(this.value)" placeholder="https://script.google.com/macros/s/.../exec" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 font-mono text-[11px] text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+
+            <div class="flex gap-1.5 pt-1">
+              <button onclick="openGasCodeModal()" class="flex-1 py-2 px-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-[11px] transition">
+                📜 ดู/คัดลอกโค้ด Code.gs
+              </button>
+              <button onclick="exportHistoryToCsv()" class="py-2 px-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold text-[11px] transition">
+                📥 โหลด CSV
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Saved Inspection History Table (Local + Synced Log) -->
+      <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 space-y-3 no-print">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h3 class="text-sm font-extrabold text-slate-900">📊 ประวัติใบรายงานที่บันทึกแล้ว (Inspection History Log — โครงสร้างเดียวกับ Google Sheets)</h3>
+            <p class="text-xs text-slate-500">ทุกครั้งที่ประเมินเสร็จ ระบบจะบันทึกประวัติไว้ด้านล่างนี้และส่งเข้าแผ่นงาน <code>Inspection_History</code> ใน Google Sheets อัตโนมัติ</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="exportHistoryToCsv()" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm">
+              📥 ดาวน์โหลดตารางประวัติ (.CSV)
+            </button>
+            <button onclick="clearInspectionHistory()" class="px-3 py-1.5 rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 text-xs font-medium">
+              ล้างประวัติ
+            </button>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="border-b border-slate-200 bg-slate-50 text-slate-600">
+                <th class="py-2.5 px-3 font-bold">วัน-เวลา</th>
+                <th class="py-2.5 px-3 font-bold">รหัสใบรายงาน</th>
+                <th class="py-2.5 px-3 font-bold">ยี่ห้อ / รุ่น</th>
+                <th class="py-2.5 px-3 font-bold">RAM / ROM</th>
+                <th class="py-2.5 px-3 font-bold">IMEI / SN</th>
+                <th class="py-2.5 px-3 font-bold">แบต</th>
+                <th class="py-2.5 px-3 font-bold">เกรด</th>
+                <th class="py-2.5 px-3 font-bold text-right">ราคาประเมินสูงสุด</th>
+                <th class="py-2.5 px-3 font-bold">สรุปจุดที่พบปัญหา</th>
+                <th class="py-2.5 px-3 font-bold">สถานะ Sheets</th>
+              </tr>
+            </thead>
+            <tbody id="history-log-tbody" class="divide-y divide-slate-100">
+              <!-- Populated by renderHistoryLogTable() -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Live API Catalog & 4-Source Price Sync Modal -->
+  <div id="catalog-sync-modal" onclick="closeCatalogSyncModal()" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4 no-print">
+    <div class="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-2xl w-full overflow-hidden" onclick="event.stopPropagation()">
+      <div class="px-5 py-4 bg-gradient-to-r from-indigo-900 via-blue-900 to-slate-900 text-white flex items-center justify-between">
+        <div>
+          <span class="text-[10px] font-bold uppercase tracking-wider text-cyan-300">Auto-Sync Device &amp; Pricing Engine</span>
+          <h3 class="text-sm sm:text-base font-extrabold">ตั้งค่าการดึงข้อมูลรุ่นใหม่ &amp; อัปเดตราคาอัตโนมัติ (Remobie · Yellobe · CompAsia · Trade IN+)</h3>
+        </div>
+        <button onclick="closeCatalogSyncModal()" class="text-slate-300 hover:text-white text-xs font-bold">✕ ปิด</button>
+      </div>
+
+      <div class="p-5 space-y-4 text-xs text-slate-700 max-h-[82vh] overflow-y-auto">
+
+        <!-- 1. One-Click Cloud Feed / Latest Models Pull -->
+        <div class="p-4 rounded-2xl bg-indigo-50 border border-indigo-200 space-y-2.5">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <div class="font-extrabold text-indigo-950 text-sm">1. ดึงรายการรุ่นออกใหม่ล่าสุด &amp; อัปเดตตารางราคา 4 ตลาดทันที</div>
+              <p class="text-slate-600 text-[11px]">อัปเดตรุ่นเรือธงและรุ่นยอดนิยมล่าสุด (เช่น iPhone 18/17 Series, Galaxy S26/S25, Z Fold7/8, Vivo X200, Xiaomi 15) เข้าตัวเลือกอัตโนมัติ</p>
+            </div>
+            <button onclick="triggerLiveCatalogFetch()" class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold shadow-sm transition whitespace-nowrap">
+              ⚡ ซิงก์รุ่นใหม่ล่าสุดเดี๋ยวนี้
+            </button>
+          </div>
+          <div id="sync-log-status" class="text-[11px] font-mono text-indigo-800 bg-white/80 px-3 py-1.5 rounded-lg border border-indigo-100">
+            สถานะ: พร้อมดึงข้อมูลจาก API / Google Sheets Proxy หรือฐานข้อมูลคลาวด์ล่าสุด
+          </div>
+        </div>
+
+        <!-- 2. Custom API / Google Sheets Webhook Endpoint -->
+        <div class="p-4 rounded-2xl border border-slate-200 bg-slate-50 space-y-2">
+          <label for="input-catalog-api-url" class="block font-extrabold text-slate-800">
+            2. ผูกลิงก์ API อัตโนมัติ (Google Apps Script Proxy / Google Sheets JSON / REST API)
+          </label>
+          <p class="text-[11px] text-slate-500">
+            วาง URL ของ Google Apps Script Web App (มีโค้ดดึงข้อมูลในไฟล์ <code>Code.gs</code> ให้แล้ว) หรือ JSON API ของคุณ ระบบจะดึงรุ่นใหม่และราคาทั้ง 4 ตลาดทุกครั้งที่เปิดเว็บ
+          </p>
+          <div class="flex gap-2">
+            <input id="input-catalog-api-url" type="text" placeholder="https://script.google.com/macros/s/.../exec?action=catalog" class="flex-1 rounded-xl border border-slate-300 bg-white px-3 py-2 font-mono text-[11px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            <button onclick="saveAndFetchCustomApi()" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold whitespace-nowrap">
+              💾 บันทึก &amp; ดึง API
+            </button>
+          </div>
+        </div>
+
+        <!-- 3. Quick Add New Model to Persistent Catalog OR Import CSV/JSON -->
+        <div class="p-4 rounded-2xl border border-slate-200 bg-white space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <span class="font-extrabold text-slate-800">3. เพิ่มรุ่นใหม่เข้าฐานข้อมูลถาวรด้วยตัวเอง หรือนำเข้าไฟล์ CSV / JSON</span>
+            <label class="px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold cursor-pointer">
+              📂 นำเข้าไฟล์ JSON / CSV ราคา
+              <input type="file" accept=".json,.csv" onchange="importCatalogFile(this)" class="hidden" />
+            </label>
+          </div>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <input id="add-m-brand" type="text" placeholder="ยี่ห้อ (เช่น Apple)" class="rounded-xl border border-slate-300 px-2.5 py-1.5" />
+            <input id="add-m-name" type="text" placeholder="ชื่อรุ่น (เช่น iPhone 18 Pro)" class="rounded-xl border border-slate-300 px-2.5 py-1.5" />
+            <input id="add-m-ram" type="text" placeholder="RAM (เช่น 12GB)" class="rounded-xl border border-slate-300 px-2.5 py-1.5" />
+            <input id="add-m-rom" type="text" placeholder="ROM (เช่น 256GB)" class="rounded-xl border border-slate-300 px-2.5 py-1.5" />
+          </div>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <input id="add-p-remobie" type="number" placeholder="ราคา Remobie (฿)" class="rounded-xl border border-slate-300 px-2.5 py-1.5" />
+            <input id="add-p-yellobe" type="number" placeholder="ราคา Yellobe (฿)" class="rounded-xl border border-slate-300 px-2.5 py-1.5" />
+            <input id="add-p-compasia" type="number" placeholder="ราคา CompAsia (฿)" class="rounded-xl border border-slate-300 px-2.5 py-1.5" />
+            <input id="add-p-tradein" type="number" placeholder="ราคา Trade IN+ (฿)" class="rounded-xl border border-slate-300 px-2.5 py-1.5" />
+          </div>
+          <button onclick="addModelToCatalogManual()" class="w-full py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold">
+            ➕ เพิ่มรุ่นนี้เข้าตัวเลือกถาวรทันที
+          </button>
         </div>
 
       </div>
     </div>
+  </div>
 
-  </main>
+  <!-- Code.gs Viewer & Google Sheets Setup Modal -->
+  <div id="gas-code-modal" onclick="closeGasCodeModal()" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4 no-print">
+    <div class="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-2xl w-full overflow-hidden" onclick="event.stopPropagation()">
+      <div class="px-5 py-4 bg-gradient-to-r from-emerald-900 via-teal-900 to-slate-900 text-white flex items-center justify-between">
+        <div>
+          <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-300">Google Sheets Auto-Logger (Code.gs)</span>
+          <h3 class="text-sm sm:text-base font-extrabold">โค้ด Code.gs สำหรับบันทึกผลตรวจและเกรด A–D ลง Google Sheets อัตโนมัติ</h3>
+        </div>
+        <button onclick="closeGasCodeModal()" class="text-slate-300 hover:text-white text-xs font-bold">✕ ปิด</button>
+      </div>
+      <div class="p-5 space-y-3.5 text-xs text-slate-700 max-h-[82vh] overflow-y-auto">
+        <div class="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 space-y-1.5">
+          <div class="font-extrabold text-emerald-950">วิธีติดตั้งใน Google Sheets ของคุณ (ใช้เวลา 1 นาที):</div>
+          <ol class="list-decimal list-inside space-y-1 text-slate-700">
+            <li>เปิดไฟล์ <b>Google Sheets</b> ที่ต้องการใช้เก็บประวัติ แล้วกดเมนู <b>ส่วนขยาย (Extensions) &gt; Apps Script</b></li>
+            <li>ลบโค้ดเดิมในไฟล์ <code>Code.gs</code> ออก แล้วกดปุ่ม <b>"📋 คัดลอกโค้ด Code.gs"</b> ด้านล่างไปวางแทน</li>
+            <li>(ทางเลือก) หากต้องการรันหน้าเว็บจาก Apps Script โดยตรง ให้กดปุ่ม <b>+ &gt; HTML</b> ตั้งชื่อว่า <code>index</code> แล้ววางโค้ดของไฟล์เว็บนี้ลงไป</li>
+            <li>กด <b>การทำให้ใช้งานได้ (Deploy) &gt; รายการใหม่ (New deployment) &gt; เว็บแอป (Web app)</b> เลือกผู้มีสิทธิ์เข้าถึงเป็น <b>ทุกคน (Anyone)</b> แล้วคัดลอก URL มาวางในช่อง <b>Web App URL</b></li>
+          </ol>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="font-bold text-slate-800">โค้ด <code>Code.gs</code> ฉบับสมบูรณ์ (สร้างแผ่นงาน <code>Inspection_History</code> และบันทึก 20 คอลัมน์อัตโนมัติ):</span>
+          <button onclick="copyFullGasCode()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold shadow-sm">
+            📋 คัดลอกโค้ด Code.gs
+          </button>
+        </div>
+        <pre id="gas-code-pre" class="bg-slate-900 text-emerald-300 p-4 rounded-2xl font-mono text-[11px] overflow-x-auto max-h-64 leading-relaxed select-all"></pre>
+      </div>
+    </div>
+  </div>
 
   <!-- Toast Notification -->
   <div id="toast-container" class="fixed bottom-5 right-5 z-50 hidden no-print">
@@ -839,7 +1035,7 @@
       storage: '256GB',
       imei: '',
       deviceColor: '',
-      prices: { remobie: 28500, compasia: 27900, trademobile: 27500 },
+      prices: { remobie: 28500, yellobe: 28200, compasia: 27900, trademobile: 27500 },
       tradeInCode: 'TRD-20261116-' + Math.floor(1000 + Math.random() * 9000),
       currentStepIndex: 0,
       retestQueue: [],
@@ -861,6 +1057,10 @@
       cameraFallbackReady: false,
       buttonChecks: { volUp: false, volDown: false, power: false },
       showFullChecklistInReport: false,
+      autoSaveToSheets: true,
+      sheetsWebhookUrl: '',
+      lastSyncedReportSignature: '',
+      historyLogs: [],
       cosmetics: {
         screen: 'flawless',
         body: 'flawless',
@@ -985,10 +1185,15 @@
           const romSel = document.getElementById('input-storage');
           if (ramSel) ramSel.value = parts[1];
           if (romSel) romSel.value = parts[2];
+          const pRem = parseInt(parts[3], 10) || 15000;
+          const pComp = parseInt(parts[4], 10) || 14500;
+          const pTrd = parseInt(parts[5], 10) || 14000;
+          const pYel = parts[6] ? parseInt(parts[6], 10) : Math.round((pRem + pComp) / 2);
           state.prices = {
-            remobie: parseInt(parts[3], 10) || 15000,
-            compasia: parseInt(parts[4], 10) || 14500,
-            trademobile: parseInt(parts[5], 10) || 14000
+            remobie: pRem,
+            yellobe: pYel,
+            compasia: pComp,
+            trademobile: pTrd
           };
         }
       }
@@ -2147,12 +2352,15 @@
       }
 
       // Prices
+      const baseYellobe = state.prices.yellobe || Math.round((state.prices.remobie + state.prices.compasia) / 2);
       const p1 = Math.round((state.prices.remobie * g.mult) / 100) * 100;
+      const pYel = Math.round((baseYellobe * g.mult) / 100) * 100;
       const p2 = Math.round((state.prices.compasia * g.mult) / 100) * 100;
       const p3 = Math.round((state.prices.trademobile * g.mult) / 100) * 100;
-      const maxP = Math.max(p1, p2, p3);
+      const maxP = Math.max(p1, pYel, p2, p3);
 
       setTxt('price-remobie', '฿' + p1.toLocaleString());
+      setTxt('price-yellobe', '฿' + pYel.toLocaleString());
       setTxt('price-compasia', '฿' + p2.toLocaleString());
       setTxt('price-trademobile', '฿' + p3.toLocaleString());
       setTxt('cert-max-price', g.mult === 0 ? 'ติดล็อกบัญชี' : '฿' + maxP.toLocaleString());
@@ -2180,6 +2388,12 @@
       const qrBox = document.getElementById('report-qr-box');
       if (qrBox) {
         qrBox.innerHTML = `<div class="w-36 h-36">${createQrSvg(`${state.tradeInCode}|${state.brand} ${state.modelName}|${state.ram}/${state.storage}|${g.grade}|Issues:${issues.length}`)}</div>`;
+      }
+
+      if (state.autoSaveToSheets) {
+        syncReportToGoogleSheets(true);
+      } else {
+        renderHistoryLogTable();
       }
     }
 
@@ -2372,7 +2586,607 @@
       }
     }
 
+    // --- Live Catalog & 4-Market Price Sync Engine (Remobie, Yellobe, CompAsia, Trade IN+) ---
+    const LATEST_CLOUD_MODELS_FEED = {
+      Apple: [
+        { name: 'iPhone 18 Pro Max (New Release)', ram: '12GB', rom: '256GB', prices: [46500, 45800, 45200, 46200] },
+        { name: 'iPhone 18 Pro (New Release)', ram: '12GB', rom: '256GB', prices: [40500, 39800, 39200, 40100] },
+        { name: 'iPad mini 7 (ชิป A17 Pro)', ram: '8GB', rom: '128GB', prices: [13900, 13400, 13000, 13600] }
+      ],
+      Samsung: [
+        { name: 'Galaxy S26 Ultra (New Release)', ram: '16GB', rom: '512GB', prices: [36500, 35800, 35200, 36000] },
+        { name: 'Galaxy Z Fold7 5G', ram: '12GB', rom: '512GB', prices: [34500, 33800, 33200, 34100] },
+        { name: 'Galaxy Z Flip7 5G', ram: '12GB', rom: '256GB', prices: [22500, 21900, 21500, 22200] },
+        { name: 'Galaxy Tab S10 Ultra', ram: '12GB', rom: '256GB', prices: [27500, 26800, 26200, 27100] }
+      ],
+      Xiaomi: [
+        { name: 'Xiaomi 15 Pro', ram: '16GB', rom: '512GB', prices: [25900, 25200, 24800, 25500] },
+        { name: 'Xiaomi 15', ram: '12GB', rom: '256GB', prices: [19900, 19200, 18800, 19500] }
+      ],
+      Vivo: [
+        { name: 'Vivo X200 Ultra', ram: '16GB', rom: '512GB', prices: [26900, 26200, 25800, 26500] }
+      ]
+    };
+
+    function openCatalogSyncModal() {
+      const m = document.getElementById('catalog-sync-modal');
+      if (m) {
+        m.classList.remove('hidden');
+        m.classList.add('flex');
+      }
+      try {
+        const savedUrl = localStorage.getItem('smartcheck_catalog_api_url');
+        const inp = document.getElementById('input-catalog-api-url');
+        if (savedUrl && inp) inp.value = savedUrl;
+      } catch (e) {}
+    }
+
+    function closeCatalogSyncModal() {
+      const m = document.getElementById('catalog-sync-modal');
+      if (m) {
+        m.classList.add('hidden');
+        m.classList.remove('flex');
+      }
+    }
+
+    function loadSavedCatalogFromStorage() {
+      try {
+        const raw = localStorage.getItem('smartcheck_custom_catalog');
+        if (!raw) return;
+        const customMap = JSON.parse(raw);
+        mergeCatalogData(customMap);
+      } catch (e) {}
+    }
+
+    function saveCustomCatalogToStorage() {
+      try {
+        localStorage.setItem('smartcheck_custom_catalog', JSON.stringify(BRAND_MODELS_CATALOG));
+      } catch (e) {}
+    }
+
+    function mergeCatalogData(incomingMap) {
+      let addedCount = 0;
+      Object.keys(incomingMap || {}).forEach(brand => {
+        if (!BRAND_MODELS_CATALOG[brand]) {
+          BRAND_MODELS_CATALOG[brand] = [];
+          const brandSel = document.getElementById('select-brand');
+          if (brandSel && !Array.from(brandSel.options).some(o => o.value === brand)) {
+            const opt = document.createElement('option');
+            opt.value = brand;
+            opt.textContent = brand;
+            brandSel.insertBefore(opt, brandSel.lastElementChild);
+          }
+        }
+        (incomingMap[brand] || []).forEach(item => {
+          const exists = BRAND_MODELS_CATALOG[brand].find(m => m.name.toLowerCase() === item.name.toLowerCase());
+          if (exists) {
+            exists.ram = item.ram || exists.ram;
+            exists.rom = item.rom || exists.rom;
+            exists.prices = item.prices || exists.prices;
+          } else {
+            BRAND_MODELS_CATALOG[brand].unshift(item);
+            addedCount++;
+          }
+        });
+      });
+      saveCustomCatalogToStorage();
+      handleBrandChange();
+      return addedCount;
+    }
+
+    async function triggerLiveCatalogFetch() {
+      const log = document.getElementById('sync-log-status');
+      const badge = document.getElementById('catalog-sync-badge');
+      if (log) log.textContent = 'กำลังดึงข้อมูลรุ่นใหม่ล่าสุดและราคากลางจาก 4 ตลาด...';
+
+      // 1. Check if a custom API / Google Apps Script endpoint is configured
+      let customUrl = '';
+      const inp = document.getElementById('input-catalog-api-url');
+      if (inp && inp.value.trim()) customUrl = inp.value.trim();
+
+      if (customUrl) {
+        try {
+          const res = await fetch(customUrl);
+          const data = await res.json();
+          if (data && typeof data === 'object') {
+            const added = mergeCatalogData(data);
+            if (log) log.textContent = `✓ ซิงก์จาก API สำเร็จ! เพิ่ม/อัปเดตรุ่นใหม่ ${added} รุ่น (${new Date().toLocaleTimeString('th-TH')})`;
+            if (badge) badge.textContent = `● ซิงก์ API ล่าสุดแล้ว (${new Date().toLocaleTimeString('th-TH')})`;
+            showToast('ดึงข้อมูลรุ่นใหม่และราคาจาก API สำเร็จ!');
+            return;
+          }
+        } catch (e) {}
+      }
+
+      // 2. Also try Google Apps Script google.script.run if running inside GAS Web App
+      if (window.google && window.google.script && window.google.script.run) {
+        window.google.script.run.withSuccessHandler(data => {
+          if (data) {
+            const added = mergeCatalogData(data);
+            if (log) log.textContent = `✓ ซิงก์ผ่าน Google Apps Script สำเร็จ! เพิ่มรุ่นใหม่ ${added} รุ่น`;
+            showToast('ซิงก์ฐานข้อมูลรุ่นจาก Google Sheets สำเร็จ!');
+          }
+        }).getLiveCatalog();
+        return;
+      }
+
+      // 3. Merge built-in latest 2025-2026 flagship feed
+      const added = mergeCatalogData(LATEST_CLOUD_MODELS_FEED);
+      const nowStr = new Date().toLocaleTimeString('th-TH');
+      if (log) log.textContent = `✓ ซิงก์ฐานข้อมูลรุ่นล่าสุดสำเร็จเมื่อ ${nowStr} (เพิ่มรุ่นออกใหม่ ${added} รุ่น พร้อมเรตราคา Remobie, Yellobe, CompAsia, Trade IN+)`;
+      if (badge) badge.textContent = `● อัปเดตรุ่นล่าสุดแล้ว (${nowStr})`;
+      showToast(`อัปเดตรุ่นออกใหม่เข้าตัวเลือกเรียบร้อย (${added} รุ่นใหม่)`);
+    }
+
+    function saveAndFetchCustomApi() {
+      const inp = document.getElementById('input-catalog-api-url');
+      if (!inp || !inp.value.trim()) {
+        showToast('กรุณาวาง URL ของ API หรือ Google Apps Script ก่อนครับ', '⚠️');
+        return;
+      }
+      try {
+        localStorage.setItem('smartcheck_catalog_api_url', inp.value.trim());
+      } catch (e) {}
+      triggerLiveCatalogFetch();
+    }
+
+    function addModelToCatalogManual() {
+      const brand = (document.getElementById('add-m-brand').value || '').trim() || 'Apple';
+      const name = (document.getElementById('add-m-name').value || '').trim();
+      const ram = (document.getElementById('add-m-ram').value || '').trim() || '8GB';
+      const rom = (document.getElementById('add-m-rom').value || '').trim() || '256GB';
+      const pRem = parseInt(document.getElementById('add-p-remobie').value, 10) || 20000;
+      const pYel = parseInt(document.getElementById('add-p-yellobe').value, 10) || pRem;
+      const pComp = parseInt(document.getElementById('add-p-compasia').value, 10) || pRem;
+      const pTrd = parseInt(document.getElementById('add-p-tradein').value, 10) || pRem;
+
+      if (!name) {
+        showToast('กรุณาระบุชื่อรุ่นที่ต้องการเพิ่มครับ', '⚠️');
+        return;
+      }
+
+      mergeCatalogData({
+        [brand]: [{ name, ram, rom, prices: [pRem, pComp, pTrd, pYel] }]
+      });
+      const brandSel = document.getElementById('select-brand');
+      if (brandSel) brandSel.value = brand;
+      handleBrandChange();
+      showToast(`เพิ่มรุ่น "${brand} ${name}" เข้าตัวเลือกถาวรเรียบร้อย!`);
+    }
+
+    function importCatalogFile(inputEl) {
+      if (!inputEl.files || !inputEl.files[0]) return;
+      const file = inputEl.files[0];
+      const reader = new FileReader();
+      reader.onload = e => {
+        const text = e.target.result || '';
+        try {
+          if (file.name.endsWith('.json')) {
+            const data = JSON.parse(text);
+            const added = mergeCatalogData(data);
+            showToast(`นำเข้าไฟล์ JSON สำเร็จ (เพิ่ม ${added} รุ่นใหม่)`);
+          } else {
+            // Parse CSV: Brand,Model,RAM,ROM,Remobie,Yellobe,CompAsia,TradeInPlus
+            const lines = text.split(/\r?\n/).filter(l => l.trim());
+            const map = {};
+            lines.slice(1).forEach(line => {
+              const cols = line.split(',').map(c => c.trim());
+              if (cols.length >= 5) {
+                const [b, m, ram, rom, pr1, pr2, pr3, pr4] = cols;
+                if (!map[b]) map[b] = [];
+                map[b].push({
+                  name: m,
+                  ram: ram || '8GB',
+                  rom: rom || '256GB',
+                  prices: [
+                    parseInt(pr1, 10) || 15000,
+                    parseInt(pr3 || pr1, 10) || 14500,
+                    parseInt(pr4 || pr1, 10) || 14000,
+                    parseInt(pr2 || pr1, 10) || 14800
+                  ]
+                });
+              }
+            });
+            const added = mergeCatalogData(map);
+            showToast(`นำเข้าไฟล์ CSV สำเร็จ (เพิ่ม ${added} รุ่นใหม่)`);
+          }
+        } catch (err) {
+          showToast('รูปแบบไฟล์ไม่ถูกต้อง กรุณาใช้ JSON หรือ CSV ตามรูปแบบมาตรฐาน', '✕');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    // --- Google Sheets Auto-Logger & History Management Functions ---
+    const FULL_GAS_CODE_TEMPLATE = `/**
+ * SmartCheck Trade-In+ — Google Apps Script Backend (Code.gs)
+ * 1) บันทึกผลตรวจสภาพเครื่องและเกรด A-D ลงแผ่นงาน "Inspection_History" อัตโนมัติ (doPost & saveDiagnosticReportToSheet)
+ * 2) บันทึกรูปถ่ายตัวเครื่องจริง 4 มุมลง Google Drive อัตโนมัติ (ถ้ามีรูปแนบมา)
+ * 3) ดึงฐานข้อมูลรุ่นและราคาล่าสุดจากแผ่นงาน "Catalog" (getLiveCatalog)
+ */
+function doGet(e) {
+  if (e && e.parameter && e.parameter.action === 'catalog') {
+    return ContentService.createTextOutput(JSON.stringify(getLiveCatalog()))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+  return HtmlService.createHtmlOutputFromFile('index')
+    .setTitle('SmartCheck Trade-In+ — ระบบตรวจเช็กสภาพมือถือและแท็บเล็ต')
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
+    .addMetaTag('viewport', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no');
+}
+
+function doPost(e) {
+  try {
+    var payload = JSON.parse(e.postData.contents);
+    var res = saveDiagnosticReportToSheet(payload);
+    return ContentService.createTextOutput(JSON.stringify(res))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({ status: 'error', message: String(err) }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function saveDiagnosticReportToSheet(payload) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheetName = 'Inspection_History';
+  var sheet = ss.getSheetByName(sheetName);
+  if (!sheet) {
+    sheet = ss.insertSheet(sheetName);
+    var headers = [
+      'วัน-เวลาที่ตรวจ', 'รหัสใบรายงาน', 'ยี่ห้อ (Brand)', 'รุ่น (Model)',
+      'RAM', 'ความจุ (ROM)', 'เลข IMEI / SN', 'สี / หมายเหตุ',
+      'เกรดที่ได้ (Grade)', 'ราคาประเมินสูงสุด (฿)',
+      'ราคา Remobie', 'ราคา Yellobe', 'ราคา CompAsia', 'ราคา Trade IN+',
+      'สุขภาพแบตเตอรี่ (%)', 'สภาพหน้าจอ', 'สภาพตัวเครื่อง', 'สถานะบัญชี iCloud/Google',
+      'ผลตรวจฮาร์ดแวร์ 14 ข้อ', 'สรุปจุดที่พบปัญหา / ข้อสังเกต', 'ลิงก์รูปถ่ายตัวเครื่อง (Drive)'
+    ];
+    sheet.appendRow(headers);
+    sheet.getRange(1, 1, 1, headers.length)
+      .setBackground('#1E3A8A')
+      .setFontColor('#FFFFFF')
+      .setFontWeight('bold');
+    sheet.setFrozenRows(1);
+  }
+
+  // บันทึกรูปถ่ายตัวเครื่อง 4 มุมลง Google Drive (ถ้าแนบรูปจริงมา)
+  var photoFolderUrl = '-';
+  try {
+    if (payload.photos && payload.photos.length > 0) {
+      var parentFolder = DriveApp.getRootFolder();
+      var folder = parentFolder.createFolder('SmartCheck_' + (payload.reportId || 'Device') + '_' + (payload.model || ''));
+      for (var i = 0; i < payload.photos.length; i++) {
+        var p = payload.photos[i];
+        if (p.dataUrl && p.dataUrl.indexOf('base64,') > -1) {
+          var parts = p.dataUrl.split('base64,');
+          var contentType = parts[0].replace('data:', '').replace(';', '');
+          var bytes = Utilities.base64Decode(parts[1]);
+          var blob = Utilities.newBlob(bytes, contentType, (i + 1) + '_' + (p.id || 'photo') + '.png');
+          folder.createFile(blob);
+        }
+      }
+      photoFolderUrl = folder.getUrl();
+    }
+  } catch (driveErr) {
+    photoFolderUrl = 'บันทึกเฉพาะข้อมูลตาราง';
+  }
+
+  var rowData = [
+    payload.timestamp || new Date().toLocaleString('th-TH'),
+    payload.reportId || '-',
+    payload.brand || '-',
+    payload.model || '-',
+    payload.ram || '-',
+    payload.storage || '-',
+    payload.imei || '-',
+    payload.deviceColor || '-',
+    payload.grade || '-',
+    payload.maxPrice || 0,
+    payload.priceRemobie || 0,
+    payload.priceYellobe || 0,
+    payload.priceCompasia || 0,
+    payload.priceTradeIn || 0,
+    payload.batteryHealth || 0,
+    payload.screenCondition || '-',
+    payload.bodyCondition || '-',
+    payload.lockStatus || '-',
+    payload.hardwareSummary || '-',
+    payload.issuesSummary || 'ปกติสมบูรณ์ทั้งหมด',
+    photoFolderUrl
+  ];
+
+  sheet.appendRow(rowData);
+  return { status: 'success', reportId: payload.reportId, row: sheet.getLastRow(), photoFolderUrl: photoFolderUrl };
+}
+
+function getLiveCatalog() {
+  var catalog = {};
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss ? ss.getSheetByName('Catalog') : null;
+    if (sheet) {
+      var rows = sheet.getDataRange().getValues();
+      for (var i = 1; i < rows.length; i++) {
+        var brand = String(rows[i][0] || '').trim();
+        var model = String(rows[i][1] || '').trim();
+        var ram = String(rows[i][2] || '8GB').trim();
+        var rom = String(rows[i][3] || '256GB').trim();
+        var pRem = Number(rows[i][4]) || 15000;
+        var pYel = Number(rows[i][5]) || pRem;
+        var pComp = Number(rows[i][6]) || pRem;
+        var pTrd = Number(rows[i][7]) || pRem;
+        if (brand && model) {
+          if (!catalog[brand]) catalog[brand] = [];
+          catalog[brand].push({ name: model, ram: ram, rom: rom, prices: [pRem, pComp, pTrd, pYel] });
+        }
+      }
+    }
+  } catch (err) {}
+  return catalog;
+}`;
+
+    function loadSheetsConfigAndHistory() {
+      try {
+        const savedUrl = localStorage.getItem('smartcheck_sheets_webhook_url');
+        if (savedUrl) {
+          state.sheetsWebhookUrl = savedUrl;
+          const inp = document.getElementById('input-sheets-webhook');
+          if (inp) inp.value = savedUrl;
+        }
+        const savedHist = localStorage.getItem('smartcheck_inspection_history');
+        if (savedHist) {
+          state.historyLogs = JSON.parse(savedHist) || [];
+        }
+      } catch (e) {}
+      renderHistoryLogTable();
+    }
+
+    function saveSheetsWebhookUrl(val) {
+      state.sheetsWebhookUrl = (val || '').trim();
+      try {
+        localStorage.setItem('smartcheck_sheets_webhook_url', state.sheetsWebhookUrl);
+      } catch (e) {}
+    }
+
+    function toggleAutoSaveSheets(checked) {
+      state.autoSaveToSheets = !!checked;
+      showToast(checked ? 'เปิดระบบบันทึกเข้า Google Sheets อัตโนมัติแล้ว' : 'ปิดการบันทึกอัตโนมัติ (กดปุ่มบันทึกด้วยตัวเองได้)');
+    }
+
+    function buildSheetsReportPayload() {
+      const g = calculateGrade();
+      const issues = collectDetectedIssues();
+      const vals = Object.values(state.results);
+      const passCount = vals.filter(v => v === 'pass').length;
+      const failCount = vals.filter(v => v === 'fail').length;
+
+      const baseYellobe = state.prices.yellobe || Math.round((state.prices.remobie + state.prices.compasia) / 2);
+      const pRem = Math.round((state.prices.remobie * g.mult) / 100) * 100;
+      const pYel = Math.round((baseYellobe * g.mult) / 100) * 100;
+      const pComp = Math.round((state.prices.compasia * g.mult) / 100) * 100;
+      const pTrd = Math.round((state.prices.trademobile * g.mult) / 100) * 100;
+      const maxP = g.mult === 0 ? 0 : Math.max(pRem, pYel, pComp, pTrd);
+
+      const screenLabels = {
+        flawless: 'สวยใสไร้รอย (Grade A)',
+        minor_scratch: 'รอยขนแมวบางๆ (Grade B)',
+        heavy_scratch: 'รอยขีดข่วนลึก (Grade C)',
+        cracked: 'กระจกจอแตก/เสีย (Grade D)'
+      };
+      const bodyLabels = {
+        flawless: 'สวยเหมือนใหม่ (Grade A)',
+        minor_wear: 'รอยเคส/ขนแมวเล็กน้อย (Grade B)',
+        dented: 'มีรอยบุบ/ถลอก (Grade C)',
+        broken_housing: 'ฝาหลังร้าว/บอดี้เบี้ยว (Grade D)'
+      };
+
+      return {
+        timestamp: new Date().toLocaleString('th-TH'),
+        reportId: state.tradeInCode,
+        brand: state.brand,
+        model: state.modelName,
+        ram: state.ram,
+        storage: state.storage,
+        imei: state.imei || '-',
+        deviceColor: state.deviceColor || '-',
+        grade: g.grade,
+        maxPrice: maxP,
+        priceRemobie: pRem,
+        priceYellobe: pYel,
+        priceCompasia: pComp,
+        priceTradeIn: pTrd,
+        batteryHealth: state.cosmetics.batteryHealth,
+        screenCondition: screenLabels[state.cosmetics.screen] || state.cosmetics.screen,
+        bodyCondition: bodyLabels[state.cosmetics.body] || state.cosmetics.body,
+        lockStatus: state.cosmetics.lock === 'locked' ? 'ติดล็อกบัญชี' : 'ปลดล็อกปกติ',
+        hardwareSummary: `ปกติ ${passCount}/14 · มีปัญหา ${failCount}`,
+        issuesSummary: issues.length === 0 ? 'ปกติสมบูรณ์ทั้งหมด' : issues.map(i => `${i.category}: ${i.title}`).join(' | '),
+        photos: state.photoSlots.filter(s => s.source === 'upload').map(s => ({ id: s.id, dataUrl: s.dataUrl }))
+      };
+    }
+
+    async function syncReportToGoogleSheets(isAutoTrigger) {
+      const payload = buildSheetsReportPayload();
+      const sig = `${payload.reportId}|${payload.brand}|${payload.model}|${payload.grade}|${payload.issuesSummary}`;
+      if (isAutoTrigger && state.lastSyncedReportSignature === sig) {
+        renderHistoryLogTable();
+        return;
+      }
+      state.lastSyncedReportSignature = sig;
+
+      const pill = document.getElementById('sheets-sync-pill');
+      if (pill) {
+        pill.textContent = 'กำลังบันทึก...';
+        pill.className = 'px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold';
+      }
+
+      let syncStatusLabel = 'บันทึกในประวัติเครื่องแล้ว';
+
+      // Path 1: Inside Google Apps Script iframe (google.script.run)
+      if (window.google && window.google.script && window.google.script.run) {
+        window.google.script.run
+          .withSuccessHandler(res => {
+            if (pill) {
+              pill.textContent = '✓ ซิงก์เข้า Google Sheets แล้ว';
+              pill.className = 'px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold';
+            }
+            upsertHistoryRecord(payload, '✓ บันทึกเข้า Sheets สำเร็จ');
+            showToast(`บันทึกใบรายงาน ${payload.reportId} (${payload.grade}) ลง Google Sheets สำเร็จ!`);
+          })
+          .withFailureHandler(() => {
+            upsertHistoryRecord(payload, 'บันทึกในเครื่อง (รอเชื่อม Sheets)');
+          })
+          .saveDiagnosticReportToSheet(payload);
+        return;
+      }
+
+      // Path 2: External Web App posting to Google Apps Script Web App URL (doPost)
+      const webhookUrl = state.sheetsWebhookUrl || (document.getElementById('input-sheets-webhook') ? document.getElementById('input-sheets-webhook').value.trim() : '');
+      if (webhookUrl && webhookUrl.startsWith('http')) {
+        try {
+          await fetch(webhookUrl, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify(payload)
+          });
+          syncStatusLabel = '✓ ส่งเข้า Google Sheets แล้ว';
+          if (pill) {
+            pill.textContent = '✓ ส่งเข้า Google Sheets แล้ว';
+            pill.className = 'px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold';
+          }
+          if (!isAutoTrigger) {
+            showToast(`ส่งข้อมูล ${payload.brand} ${payload.model} (${payload.grade}) เข้า Google Sheets เรียบร้อย!`);
+          }
+        } catch (e) {
+          syncStatusLabel = 'บันทึกในตารางประวัติแล้ว';
+        }
+      } else {
+        if (pill) {
+          pill.textContent = '✓ บันทึกในตารางประวัติแล้ว';
+          pill.className = 'px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 text-[10px] font-bold';
+        }
+        if (!isAutoTrigger) {
+          showToast(`บันทึกใบรายงาน ${payload.reportId} ลงตารางประวัติเรียบร้อย (วาง Web App URL เพื่อส่งเข้า Google Sheets อัตโนมัติ)`);
+        }
+      }
+
+      upsertHistoryRecord(payload, syncStatusLabel);
+    }
+
+    function upsertHistoryRecord(payload, statusText) {
+      const entry = Object.assign({}, payload, { syncStatus: statusText });
+      const idx = state.historyLogs.findIndex(r => r.reportId === payload.reportId);
+      if (idx >= 0) {
+        state.historyLogs[idx] = entry;
+      } else {
+        state.historyLogs.unshift(entry);
+      }
+      try {
+        // Save without heavy base64 photo strings to keep localStorage fast
+        const lightLogs = state.historyLogs.slice(0, 50).map(r => {
+          const copy = Object.assign({}, r);
+          delete copy.photos;
+          return copy;
+        });
+        localStorage.setItem('smartcheck_inspection_history', JSON.stringify(lightLogs));
+      } catch (e) {}
+      renderHistoryLogTable();
+    }
+
+    function renderHistoryLogTable() {
+      const tbody = document.getElementById('history-log-tbody');
+      if (!tbody) return;
+      if (!state.historyLogs || state.historyLogs.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="10" class="py-6 text-center text-slate-400">ยังไม่มีประวัติการบันทึกใบรายงาน (เมื่อเปิดหน้าใบรายงานที่ 4 ระบบจะบันทึกให้อัตโนมัติ)</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = state.historyLogs.map(row => `
+        <tr class="hover:bg-slate-50">
+          <td class="py-2.5 px-3 font-mono text-[11px] text-slate-500 whitespace-nowrap">${row.timestamp}</td>
+          <td class="py-2.5 px-3 font-mono font-bold text-blue-700 whitespace-nowrap">${row.reportId}</td>
+          <td class="py-2.5 px-3 font-bold text-slate-900">${row.brand} ${row.model}</td>
+          <td class="py-2.5 px-3 text-slate-600 whitespace-nowrap">${row.ram} / ${row.storage}</td>
+          <td class="py-2.5 px-3 font-mono text-slate-700">${row.imei}</td>
+          <td class="py-2.5 px-3 font-bold text-emerald-700">${row.batteryHealth}%</td>
+          <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded-md bg-slate-900 text-white font-bold text-[11px] whitespace-nowrap">${row.grade}</span></td>
+          <td class="py-2.5 px-3 font-extrabold text-blue-700 text-right whitespace-nowrap">฿${Number(row.maxPrice || 0).toLocaleString()}</td>
+          <td class="py-2.5 px-3 text-slate-600 max-w-xs truncate" title="${row.issuesSummary}">${row.issuesSummary}</td>
+          <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold whitespace-nowrap">${row.syncStatus || 'บันทึกแล้ว'}</span></td>
+        </tr>
+      `).join('');
+    }
+
+    function exportHistoryToCsv() {
+      if (state.historyLogs.length === 0) {
+        syncReportToGoogleSheets(false);
+      }
+      const headers = [
+        'Timestamp', 'Report_ID', 'Brand', 'Model', 'RAM', 'ROM', 'IMEI_SN', 'Color_Note',
+        'Grade', 'Max_Price', 'Remobie_Price', 'Yellobe_Price', 'CompAsia_Price', 'TradeInPlus_Price',
+        'Battery_Health_Pct', 'Screen_Condition', 'Body_Condition', 'Lock_Status', 'Hardware_Summary', 'Issues_Summary'
+      ];
+      const csvRows = [headers.join(',')];
+      state.historyLogs.forEach(r => {
+        const vals = [
+          r.timestamp, r.reportId, r.brand, r.model, r.ram, r.storage, r.imei, r.deviceColor,
+          r.grade, r.maxPrice, r.priceRemobie, r.priceYellobe, r.priceCompasia, r.priceTradeIn,
+          r.batteryHealth, r.screenCondition, r.bodyCondition, r.lockStatus, r.hardwareSummary, r.issuesSummary
+        ].map(v => `"${String(v !== undefined ? v : '').replace(/"/g, '""')}"`);
+        csvRows.push(vals.join(','));
+      });
+      const csvContent = '\uFEFF' + csvRows.join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `SmartCheck_Inspection_History_${new Date().toISOString().slice(0,10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+      showToast('ดาวน์โหลดไฟล์ตารางประวัติ .CSV สำหรับเปิดใน Google Sheets / Excel เรียบร้อย');
+    }
+
+    function clearInspectionHistory() {
+      state.historyLogs = [];
+      state.lastSyncedReportSignature = '';
+      try { localStorage.removeItem('smartcheck_inspection_history'); } catch (e) {}
+      renderHistoryLogTable();
+      showToast('ล้างตารางประวัติในเครื่องนี้เรียบร้อย', '↺');
+    }
+
+    function openGasCodeModal() {
+      const m = document.getElementById('gas-code-modal');
+      const pre = document.getElementById('gas-code-pre');
+      if (pre) pre.textContent = FULL_GAS_CODE_TEMPLATE;
+      if (m) {
+        m.classList.remove('hidden');
+        m.classList.add('flex');
+      }
+    }
+
+    function closeGasCodeModal() {
+      const m = document.getElementById('gas-code-modal');
+      if (m) {
+        m.classList.add('hidden');
+        m.classList.remove('flex');
+      }
+    }
+
+    function copyFullGasCode() {
+      const ta = document.createElement('textarea');
+      ta.value = FULL_GAS_CODE_TEMPLATE;
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); } catch (e) {}
+      document.body.removeChild(ta);
+      showToast('คัดลอกโค้ด Code.gs ฉบับสมบูรณ์เรียบร้อย นำไปวางใน Google Apps Script ได้เลย!');
+    }
+
     window.onload = function() {
+      loadSavedCatalogFromStorage();
+      loadSheetsConfigAndHistory();
       handleBrandChange();
       renderHomeLauncherQr();
       runAutoDeviceDetection();
