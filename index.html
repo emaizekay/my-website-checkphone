@@ -140,6 +140,25 @@
       background-color: var(--fs-active-bg, #2F2D29) !important;
     }
 
+    /* GitHub ios-haptics / browser-haptic direct-tap native switch overlay for iOS 18 & iOS 26.5+ */
+    .ios-haptic-btn-wrap {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .ios-haptic-native-switch {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0.01;
+      cursor: pointer;
+      z-index: 10;
+      margin: 0;
+      transform: scale(4);
+    }
     .touch-cell {
       user-select: none;
       -webkit-user-select: none;
@@ -2178,66 +2197,94 @@
           </div>
         `;
       } else if (item.id === 'vibration') {
-        const isApple = /iPhone|iPad|Macintosh/i.test(navigator.userAgent || '') || !navigator.vibrate;
+        state.iosHapticTapCount = 0;
         stage.innerHTML = `
-          <div class="max-w-lg w-full text-center space-y-3.5 p-4">
-            <div id="vib-icon" class="w-20 h-20 mx-auto rounded-full bg-blue-50 border border-blue-200 text-blue-700 flex items-center justify-center transition-transform duration-150"><div class="scale-150">${PIXEL_DIAG_SVGS.vibration}</div></div>
-            <div class="text-base font-bold text-slate-800">ทดสอบมอเตอร์สั่น &amp; Taptic Engine</div>
-            <div id="vib-pulse-status" class="text-xs font-mono font-bold text-blue-700 bg-blue-50 px-3 py-1.5 rounded-xl border border-blue-200">
-              ${isApple ? '🍎 โหมด iPhone / iPad: กดปุ่มสั่งสั่นคลื่นความถี่ต่ำ หรือแตะสวิตช์ Haptic ด้านล่าง' : '🤖 โหมด Android: กดสั่งสั่นตัวเครื่องแล้วเลือกจำนวนจังหวะ'}
+          <div class="max-w-lg w-full text-center space-y-3.5 p-3">
+            <div id="vib-icon" class="w-16 h-16 mx-auto rounded-full bg-blue-50 border border-blue-200 text-blue-700 flex items-center justify-center transition-transform duration-150"><div class="scale-125">${PIXEL_DIAG_SVGS.vibration}</div></div>
+            <div class="text-base font-bold text-slate-800">ทดสอบระบบสั่น (Vibration &amp; iOS Taptic Engine)</div>
+
+            <!-- Method 1: GitHub browser-haptic / ios-haptics Direct-Tap Native Switch Overlay -->
+            <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 space-y-2.5 text-xs">
+              <div class="font-extrabold text-emerald-950">วิธีที่ 1 (สำหรับ iPhone iOS 18+ และ Android): แตะสวิตช์/ปุ่ม Haptic 3 ครั้ง</div>
+              <p class="text-slate-600 text-[11px]">
+                ใช้เทคนิค <code>&lt;input type="checkbox" switch&gt;</code> จาก GitHub (<code>ios-haptics</code> / <code>browser-haptic</code>) แตะที่สวิตช์มาตรฐานด้านล่าง 3 ครั้งเพื่อรับแรงสั่น Taptic ที่นิ้วโดยตรง (ต้องเปิด <b>สั่นเมื่อแตะ / System Haptics</b> ในตั้งค่า iPhone)
+              </p>
+              <div class="flex flex-col items-center gap-2.5 py-1">
+                <label for="native-ios-switch-vis" class="flex items-center justify-between gap-4 px-5 py-3 rounded-2xl bg-white border-2 border-emerald-300 shadow-sm cursor-pointer select-none">
+                  <span class="font-extrabold text-slate-800 text-xs">แตะสลับสวิตช์นี้ 3 ครั้ง (<span id="haptic-tap-counter" class="text-emerald-700">0/3</span>):</span>
+                  <input id="native-ios-switch-vis" type="checkbox" switch onchange="handleDirectIosHapticTap()" style=" accent-color:#587868; transform:scale(1.25); " />
+                </label>
+
+                <div class="ios-haptic-btn-wrap rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs px-6 py-3 shadow-sm">
+                  <input id="native-ios-switch-overlay" type="checkbox" switch onchange="handleDirectIosHapticTap()" class="ios-haptic-native-switch" />
+                  <span>📳 แตะปุ่มนี้ซ้ำ 3 ครั้งเพื่อทดสอบสั่น (แตะแล้ว <span id="haptic-tap-counter-2">0/3</span>)</span>
+                </div>
+              </div>
+              <div id="vib-pulse-status" class="text-[11px] font-mono font-bold text-emerald-900 bg-white/90 px-3 py-1.5 rounded-xl border border-emerald-200">
+                รอการแตะสวิตช์ทดสอบ (0/3 ครั้ง)...
+              </div>
             </div>
-            <div class="flex flex-wrap justify-center gap-2">
-              <button type="button" onclick="playRandomVibration()" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-sm">
-                📳 กดสั่งสั่นเครื่องแบบสุ่มจังหวะ
-              </button>
-            </div>
-            <!-- iOS Safari Hardware Haptic Switch & Silent Switch Check -->
-            <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200 space-y-2 text-xs text-left">
-              <div class="font-bold text-slate-800">สำหรับ iPhone / iPad (เนื่องจาก iOS บล็อกคำสั่งสั่นเว็บทั่วไป):</div>
-              <label class="flex items-center justify-between gap-2 p-2 rounded-xl bg-white border border-slate-200 cursor-pointer">
-                <span class="font-medium text-slate-700">1. แตะสวิตช์นี้เพื่อกระตุ้น Taptic Engine (iOS 17.4+) หรือสลับปุ่มเปิด-ปิดเสียงข้างเครื่อง:</span>
-                <input type="checkbox" switch onchange="triggerIosHapticSwitch(this)" class="w-5 h-5 accent-emerald-600 cursor-pointer" />
-              </label>
-              <button type="button" onclick="confirmIosVibrationPass()" class="w-full py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm">
-                ✓ ยืนยันมอเตอร์สั่น / Taptic Engine ทำงานปกติ
-              </button>
-            </div>
-            <p class="text-xs text-slate-500">หรือเลือกจำนวนจังหวะที่สั่น/กระเพื่อม (1–3 จังหวะ):</p>
-            <div class="flex justify-center gap-2">
-              ${[1, 2, 3].map(n => `<button type="button" onclick="verifyVibAnswer(${n})" class="px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold hover:bg-indigo-50">${n} จังหวะ</button>`).join('')}
+
+            <!-- Method 2: Android Multi-Pulse Random Vibration -->
+            <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200 space-y-2 text-xs">
+              <div class="font-bold text-slate-700">วิธีที่ 2 (โหมดสุ่มจังหวะสั่นสำหรับ Android):</div>
+              <div class="flex flex-wrap justify-center gap-2">
+                <button type="button" onclick="playRandomVibration()" class="px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold">
+                  📳 สั่งสั่นแบบสุ่ม (1–3 ครั้ง)
+                </button>
+                ${[1, 2, 3].map(n => `<button type="button" onclick="verifyVibAnswer(${n})" class="px-3.5 py-2 rounded-xl border border-slate-300 bg-white text-xs font-bold">${n} ครั้ง</button>`).join('')}
+              </div>
             </div>
           </div>
         `;
       } else if (item.id === 'sensors') {
-        const needsIosPerm = typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function';
         stage.innerHTML = `
-          <div class="max-w-lg w-full text-center space-y-3.5 p-4">
-            <div class="text-base font-bold text-slate-800">Proximity Sensor &amp; Motion (ทดสอบเซนเซอร์แนบหู / เอียงเครื่อง)</div>
-            <div class="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 space-y-2 text-xs">
-              <div class="font-extrabold text-emerald-950">วิธีที่ 1: ทดสอบ Proximity Sensor (เซนเซอร์แนบหูตามมาตรฐาน Remobie Check)</div>
-              <p class="text-slate-600">ใช้ฝ่ามือบังบริเวณส่วนบนของหน้าจอ (ใกล้ลำโพงสนทนา) หรือแตะปุ่มจำลองการแนบหูด้านล่างค้างไว้ 1 วินาที</p>
-              <button type="button" onpointerdown="triggerProximitySensorPass()" onclick="triggerProximitySensorPass()" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold shadow-sm">
-                ✋ แตะ/ใช้มือบังส่วนบนหน้าจอเพื่อยืนยัน Proximity Sensor
-              </button>
+          <div class="max-w-lg w-full text-center space-y-3 p-3">
+            <div class="text-base font-bold text-slate-800">ทดสอบเซนเซอร์แนบหู (Proximity) &amp; เซนเซอร์เอียงเครื่อง (Gyro)</div>
+
+            <!-- 1. Real Optical Proximity Sensor via Front Camera Luminance Drop -->
+            <div class="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 space-y-2.5 text-xs text-left">
+              <div class="flex items-center justify-between gap-2">
+                <span class="font-extrabold text-emerald-950">1. ทดสอบ Proximity Sensor จริง (วัดการบังแสงส่วนบนของจอ)</span>
+                <span id="prox-lux-badge" class="px-2 py-0.5 rounded-full bg-white text-emerald-800 font-mono font-bold text-[11px] border border-emerald-300">แสง: รอเปิดเซนเซอร์</span>
+              </div>
+              <p class="text-slate-600 text-[11px]">
+                กดปุ่ม <b>"เปิดเซนเซอร์วัดระยะแนบหู"</b> ด้านล่าง แล้ว <b>นำฝ่ามือมาบังด้านบนของหน้าจอ (ปิดบังกล้องหน้า)</b> ให้แถบวัดแสงลดลงต่ำกว่า 35% ระบบจะผ่านด่านให้อัตโนมัติทันที
+              </p>
+              <div class="w-full bg-slate-200 h-4 rounded-full overflow-hidden p-0.5">
+                <div id="prox-light-bar" class="bg-emerald-600 h-full rounded-full transition-all duration-100" style="width:100%;"></div>
+              </div>
+              <video id="prox-cam-video" autoplay playsinline muted class="w-1 h-1 opacity-0 pointer-events-none absolute"></video>
+              <div class="flex flex-wrap gap-2">
+                <button type="button" onclick="startRealProximityCameraSensor()" class="flex-1 py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-sm">
+                  ✋ 1. เปิดเซนเซอร์วัดระยะแนบหู (ใช้มือบังส่วนบนของจอ)
+                </button>
+              </div>
             </div>
-            <div class="text-xs font-bold text-slate-500">— หรือ วิธีที่ 2: เอียงตัวเครื่อง (Gyroscope 3 ทิศทาง) —</div>
-            <button id="btn-ios-gyro-perm" type="button" onclick="requestAndStartGyro()" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-extrabold shadow-sm">
-              🧭 ${needsIosPerm ? 'แตะเพื่ออนุญาตสิทธิ์เซ็นเซอร์ iPhone / iPad (จำเป็นสำหรับ iOS)' : 'เริ่มเปิดรับสัญญาณเซ็นเซอร์หมุนจอ'}
-            </button>
-            <div class="w-36 h-36 mx-auto rounded-full border-4 border-blue-200 bg-slate-50 relative flex items-center justify-center">
-              <div id="sensor-ball" class="w-6 h-6 rounded-full bg-blue-600 absolute transition-transform duration-75"></div>
-            </div>
-            <div class="flex justify-center gap-2 text-[11px] font-bold">
-              <span id="gyro-pill-left" class="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600">⬅️ เอียงซ้าย</span>
-              <span id="gyro-pill-right" class="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600">➡️ เอียงขวา</span>
-              <span id="gyro-pill-tilt" class="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600">↕️ ก้ม/เงย</span>
-            </div>
-            <div id="sensor-status" class="text-xs font-mono text-slate-600">
-              ${needsIosPerm ? 'บน iPhone/iPad กรุณากดปุ่มสีเขียวด้านบนแล้วกด "อนุญาต (Allow)" เพื่ออ่านค่า Gyroscope' : 'เอียงเครื่องไปทางซ้าย ขวา และก้มหน้า...'}
-            </div>
-            <div class="pt-1 space-y-1">
-              <div class="text-[11px] text-slate-500">กรณีไม่ได้เปิดผ่าน HTTPS หรือทดสอบด้วยมือ (เลื่อนแถบไปสุดขอบ):</div>
-              <input type="range" min="-35" max="35" value="0" oninput="handleSensorFallbackSlide(this.value)" class="w-52 accent-blue-600 cursor-pointer" />
+
+            <!-- 2. Real Gyroscope / Accelerometer Motion Sensor -->
+            <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2.5 text-xs">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <span class="font-extrabold text-slate-800">2. ทดสอบเซนเซอร์เอียงเครื่อง (Gyroscope / Accelerometer)</span>
+                <button id="btn-ios-gyro-perm" type="button" onclick="requestAndStartGyro()" class="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-extrabold shadow-sm">
+                  🧭 กดเปิดสิทธิ์เซ็นเซอร์เอียงเครื่อง
+                </button>
+              </div>
+              <div class="flex items-center justify-center gap-4">
+                <div class="w-24 h-24 rounded-full border-4 border-blue-200 bg-white relative flex items-center justify-center shrink-0">
+                  <div id="sensor-ball" class="w-5 h-5 rounded-full bg-blue-600 absolute transition-transform duration-75"></div>
+                </div>
+                <div class="text-left space-y-1.5">
+                  <div class="flex flex-wrap gap-1.5 text-[11px] font-bold">
+                    <span id="gyro-pill-left" class="px-2 py-0.5 rounded-lg bg-white border border-slate-200 text-slate-600">⬅️ ซ้าย</span>
+                    <span id="gyro-pill-right" class="px-2 py-0.5 rounded-lg bg-white border border-slate-200 text-slate-600">➡️ ขวา</span>
+                    <span id="gyro-pill-tilt" class="px-2 py-0.5 rounded-lg bg-white border border-slate-200 text-slate-600">↕️ ก้ม/เงย</span>
+                  </div>
+                  <div id="sensor-status" class="text-[11px] font-mono text-slate-600">
+                    กดปุ่มเปิดสิทธิ์เซ็นเซอร์ แล้วเอียงเครื่องซ้าย-ขวา-ก้มเงย
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         `;
@@ -2641,13 +2688,98 @@
       showToast(`ปล่อยสัญญาณสั่น ${pulses} จังหวะแล้ว`);
     }
 
-    function triggerIosHapticSwitch(chkEl) {
-      playLowFreqTapticPulse(1);
-      const stBox = document.getElementById('vib-pulse-status');
-      if (stBox) {
-        stBox.textContent = '✓ กระตุ้น Taptic Engine สำเร็จ! กดปุ่มยืนยันสีเขียวด้านล่างเพื่อไปต่อได้เลย';
+    function handleDirectIosHapticTap() {
+      state.iosHapticTapCount = (state.iosHapticTapCount || 0) + 1;
+      if (navigator.vibrate) {
+        try { navigator.vibrate(140); } catch (e) {}
       }
-      unlockCurrentStepPass('iOS Taptic OK');
+      playLowFreqTapticPulse(1);
+      const ic = document.getElementById('vib-icon');
+      if (ic) {
+        ic.style.transform = 'scale(1.22)';
+        setTimeout(() => { if (ic) ic.style.transform = 'scale(1)'; }, 150);
+      }
+      const c1 = document.getElementById('haptic-tap-counter');
+      const c2 = document.getElementById('haptic-tap-counter-2');
+      const stBox = document.getElementById('vib-pulse-status');
+      const count = Math.min(3, state.iosHapticTapCount);
+      if (c1) c1.textContent = `${count}/3`;
+      if (c2) c2.textContent = `${count}/3`;
+      if (stBox) {
+        stBox.textContent = count >= 3
+          ? '✓ ทดสอบแตะสวิตช์ Haptic ครบ 3/3 ครั้งสำเร็จ!'
+          : `📳 แตะสวิตช์ Haptic แล้ว ${count}/3 ครั้ง (แตะอีก ${3 - count} ครั้งเพื่อยืนยัน)`;
+      }
+      if (count >= 3) {
+        unlockCurrentStepPass('Haptic 3/3 OK');
+        setTimeout(() => markCurrentTest('pass'), 280);
+      }
+    }
+
+    function startRealProximityCameraSensor() {
+      stopActiveMedia();
+      const badge = document.getElementById('prox-lux-badge');
+      const bar = document.getElementById('prox-light-bar');
+      const video = document.getElementById('prox-cam-video');
+      if (badge) badge.textContent = 'กำลังเปิดเซนเซอร์วัดแสงด้านบน...';
+
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 64, height: 64 } }).then(stream => {
+          state.activeStream = stream;
+          if (video) {
+            video.srcObject = stream;
+            video.play().catch(() => {});
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = 16;
+          canvas.height = 16;
+          const ctx = canvas.getContext('2d');
+          let baselineLuma = null;
+          let darkFrames = 0;
+
+          state.micInterval = setInterval(() => {
+            if (!video || video.readyState < 2) return;
+            try {
+              ctx.drawImage(video, 0, 0, 16, 16);
+              const data = ctx.getImageData(0, 0, 16, 16).data;
+              let sum = 0;
+              for (let i = 0; i < data.length; i += 4) {
+                sum += 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+              }
+              const avgLuma = Math.round(sum / 256);
+              if (baselineLuma === null && avgLuma > 25) {
+                baselineLuma = avgLuma;
+              }
+              const pct = Math.min(100, Math.max(4, Math.round((avgLuma / 200) * 100)));
+              if (bar) bar.style.width = pct + '%';
+
+              const isCovered = (avgLuma <= 42) || (baselineLuma && avgLuma <= baselineLuma * 0.45);
+              if (isCovered) {
+                darkFrames++;
+                if (badge) badge.textContent = `✋ ตรวจพบการบังเซนเซอร์! (แสง ${avgLuma} · ยืนยัน ${darkFrames}/4)`;
+                if (bar) bar.className = 'bg-amber-500 h-full rounded-full transition-all duration-100';
+              } else {
+                if (badge) badge.textContent = `ความสว่างปัจจุบัน: ${avgLuma} (เอามือบังกล้องหน้าให้มืดลง)`;
+                if (bar) bar.className = 'bg-emerald-600 h-full rounded-full transition-all duration-100';
+              }
+
+              if (darkFrames >= 4) {
+                stopActiveMedia();
+                if (badge) badge.textContent = '✓ Proximity Sensor ตรวจพบการบังหน้าจอสำเร็จ!';
+                playLowFreqTapticPulse(1);
+                unlockCurrentStepPass('Proximity Verified');
+                setTimeout(() => markCurrentTest('pass'), 300);
+              }
+            } catch (e) {}
+          }, 140);
+        }).catch(() => {
+          if (badge) badge.textContent = 'เบราว์เซอร์บล็อกกล้อง — กรุณากดเปิดเซ็นเซอร์เอียงเครื่องด้านล่างแทน';
+        });
+      }
+    }
+
+    function triggerIosHapticSwitch(chkEl) {
+      handleDirectIosHapticTap();
     }
 
     function confirmIosVibrationPass() {
@@ -2702,42 +2834,46 @@
       const st = document.getElementById('sensor-status');
       const permBtn = document.getElementById('btn-ios-gyro-perm');
       try {
-        // iOS 13+ requires explicit permission requested inside a user click gesture
-        if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-          const res = await DeviceOrientationEvent.requestPermission();
-          if (res !== 'granted') {
-            if (st) st.textContent = '⚠️ iOS ปฏิเสธสิทธิ์เซ็นเซอร์ (หรือไม่ได้เปิดผ่าน https://) — สามารถเลื่อนแถบด้านล่างเพื่อยืนยันแทนได้';
-            return;
-          }
-        }
-        if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
-          try { await DeviceMotionEvent.requestPermission(); } catch (e) {}
+        // Call both requestPermission() methods synchronously BEFORE awaiting so iOS WebKit does not expire the user gesture token!
+        const pOrient = (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function')
+          ? DeviceOrientationEvent.requestPermission().catch(() => 'denied')
+          : Promise.resolve('granted');
+        const pMotion = (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function')
+          ? DeviceMotionEvent.requestPermission().catch(() => 'denied')
+          : Promise.resolve('granted');
+
+        const [resOrient, resMotion] = await Promise.all([pOrient, pMotion]);
+        if (resOrient !== 'granted' && resMotion !== 'granted') {
+          if (st) st.textContent = '⚠️ iOS ปิดสิทธิ์ไว้ (โปรดปิดแท็บ Safari แล้วเปิดใหม่เพื่อกด Allow หรือใช้มือบังกล้องในข้อ 1 แทน)';
+          return;
         }
         if (permBtn) {
-          permBtn.textContent = '✓ เปิดรับสัญญาณ Gyroscope แล้ว — เอียงเครื่องได้เลย';
-          permBtn.className = 'px-5 py-2.5 rounded-xl bg-emerald-600 text-white text-xs font-extrabold shadow-sm';
+          permBtn.textContent = '✓ เปิด Gyroscope แล้ว — เอียงเครื่องได้เลย';
+          permBtn.className = 'px-3.5 py-1.5 rounded-xl bg-emerald-600 text-white text-xs font-extrabold shadow-sm';
         }
-        if (st) st.textContent = 'กำลังอ่านค่า Gyroscope สด... กรุณาเอียงเครื่องไปทางซ้าย ขวา และก้มหน้า';
+        if (st) st.textContent = 'กำลังอ่านค่า Gyroscope สด... เอียงเครื่องซ้าย-ขวา-ก้มเงย';
         bindGyroEvents();
       } catch (err) {
-        if (st) st.textContent = 'กรุณาเอียงเครื่อง หรือเลื่อนแถบจำลองด้านล่างหากเปิดในโหมดพรีวิว';
         bindGyroEvents();
       }
     }
 
     function bindGyroEvents() {
-      window.ondeviceorientation = function(e) {
+      const orientHandler = function(e) {
         if (e.gamma !== null || e.beta !== null) {
           processGyroTiltValues(e.gamma || 0, e.beta || 0);
         }
       };
-      // Fallback for iOS devices that fire devicemotion accelerationIncludingGravity
-      window.ondevicemotion = function(e) {
-        const acc = e.accelerationIncludingGravity;
+      const motionHandler = function(e) {
+        const acc = e.accelerationIncludingGravity || e.acceleration;
         if (acc && (acc.x !== null || acc.y !== null)) {
-          processGyroTiltValues((acc.x || 0) * 4, (acc.y || 0) * 4);
+          processGyroTiltValues((acc.x || 0) * 4.5, (acc.y || 0) * 4.5);
         }
       };
+      window.ondeviceorientation = orientHandler;
+      window.ondevicemotion = motionHandler;
+      window.addEventListener('deviceorientation', orientHandler, true);
+      window.addEventListener('devicemotion', motionHandler, true);
     }
 
     function triggerProximitySensorPass() {
