@@ -2837,126 +2837,96 @@
         `;
       } else if (item.id === 'parts_auth') {
         const pa = state.partsAudit;
-        const is120HzModel = /Pro|Ultra|Fold|Flip|120|S2[1-6]|Find X|X100|X200|Xiaomi 1[45]/i.test(state.modelName || '');
+        const s1 = pa.bezelChin || '';
+        const s2 = pa.oledVerdict || '';
+        const s3 = pa.sysVerdict || '';
+        const btnCls = (active, tone) => {
+          if (!active) return 'py-2.5 px-3 rounded-xl bg-white hover:bg-slate-50 text-[#1E2433] border border-slate-300 font-semibold text-xs text-left transition';
+          if (tone === 'ok') return 'py-2.5 px-3 rounded-xl bg-[#D4E9D8] text-[#143A26] border-2 border-[#5EA874] font-extrabold text-xs text-left shadow-sm transition';
+          if (tone === 'info') return 'py-2.5 px-3 rounded-xl bg-[#C4DCFF] text-[#162944] border-2 border-[#5A92E0] font-extrabold text-xs text-left shadow-sm transition';
+          return 'py-2.5 px-3 rounded-xl bg-[#F6CBD5] text-[#5C192D] border-2 border-[#D46A87] font-extrabold text-xs text-left shadow-sm transition';
+        };
         stage.innerHTML = `
-          <div class="w-full max-w-2xl space-y-4 text-left">
-            <!-- 1. Automated Live Display Telemetry Scanner (Hz, Display-P3, HDR, DPR) -->
-            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
-              <div class="flex flex-wrap items-center justify-between gap-2">
-                <div>
-                  <div class="text-xs font-extrabold text-slate-900">1. สแกนฮาร์ดแวร์หน้าจออัตโนมัติ (ตรวจจับจอแท้ OLED / ProMotion vs จอเทียบ LCD)</div>
-                  <p class="text-[11px] text-slate-500">วัดอัตรารีเฟรชจริง (Hz), ขอบเขตสี Display-P3, รองรับ HDR และทดสอบแสงรั่วสีดำสนิท OLED</p>
-                </div>
-                <div class="flex gap-1.5">
-                  <button type="button" onclick="runDisplayAuthenticityScan()" class="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold shadow-sm">
-                    สแกนสเปกหน้าจอจริง
-                  </button>
-                  <button type="button" onclick="openOledBlackTest()" class="px-3 py-2 rounded-xl bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 text-xs font-bold">
-                    ทดสอบจอดำ OLED
-                  </button>
-                </div>
+          <div class="w-full max-w-2xl space-y-3 text-left text-xs">
+            <div class="p-3.5 rounded-2xl bg-[#FFF0CA]/65 border border-[#E2B380] flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <div class="font-extrabold text-[#4A2B0F]">ตรวจหน้าจอแท้แบบเร็ว 3 ขั้นตอน (30 วินาที · มาตรฐานสากล/ไทย)</div>
+                <p class="text-[11px] text-[#5C3A16] mt-0.5">ระบบไม่กรอกผล "ปกติ" ให้อัตโนมัติ — แตะเลือกผลตรวจจริงให้ครบทั้ง 3 ขั้นตอนด้านล่าง</p>
               </div>
-
-              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-                <div class="bg-white p-2.5 rounded-xl border border-slate-200">
-                  <div class="text-[10px] text-slate-400">Refresh Rate จริง</div>
-                  <div id="auth-val-hz" class="font-mono font-extrabold text-slate-900 mt-0.5">${pa.measuredHz ? pa.measuredHz + ' Hz' : 'รอสแกน...'}</div>
-                </div>
-                <div class="bg-white p-2.5 rounded-xl border border-slate-200">
-                  <div class="text-[10px] text-slate-400">Wide Color (P3)</div>
-                  <div id="auth-val-p3" class="font-bold text-slate-900 mt-0.5">${pa.measuredHz ? (pa.p3Gamut ? '✓ รองรับ P3' : '✕ ไม่รองรับ P3') : 'รอสแกน...'}</div>
-                </div>
-                <div class="bg-white p-2.5 rounded-xl border border-slate-200">
-                  <div class="text-[10px] text-slate-400">HDR / Dynamic</div>
-                  <div id="auth-val-hdr" class="font-bold text-slate-900 mt-0.5">${pa.measuredHz ? (pa.hdrSupport ? '✓ รองรับ HDR' : 'SDR ทั่วไป') : 'รอสแกน...'}</div>
-                </div>
-                <div class="bg-white p-2.5 rounded-xl border border-slate-200">
-                  <div class="text-[10px] text-slate-400">Pixel Ratio (DPR)</div>
-                  <div id="auth-val-dpr" class="font-mono font-bold text-slate-900 mt-0.5">${pa.dpr ? pa.dpr + 'x' : (window.devicePixelRatio || 1) + 'x'}</div>
-                </div>
-              </div>
-              <div id="auth-scan-verdict" class="text-[11px] font-medium px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-600">
-                ${is120HzModel
-                  ? 'คำแนะนำ: รุ่นนี้รองรับจอ 120Hz (ProMotion / AMOLED) หากสแกนได้ 60Hz ขณะไม่ได้เปิดโหมดประหยัดพลังงาน ให้ตรวจขอบจอล่างและประวัติเปลี่ยนจออย่างละเอียด'
-                  : 'กดปุ่ม "สแกนสเปกหน้าจอจริง" และ "ทดสอบจอดำ OLED" เพื่อตรวจแสงรั่วสีเทาของจอเทียบ LCD/Incell'}
-              </div>
+              <button type="button" onclick="openOledBlackTest()" class="px-3 py-1.5 rounded-xl bg-white hover:bg-slate-50 text-[#162944] border border-[#8EB6EB] font-bold text-[11px] shadow-sm">
+                เปิดจอดำ OLED เต็มจอ
+              </button>
             </div>
 
-            <!-- 2. Forensic Anti-IC-Swap Check (Manual Inspector Verification — No Auto-Fill!) -->
-            <div class="p-4 rounded-2xl bg-white border border-slate-200 space-y-3 text-xs">
-              <div>
-                <div class="font-extrabold text-slate-900">2. บันทึกผลตรวจจริงโดยผู้ตรวจ (ระบบไม่ได้กรอกให้อัตโนมัติ — กรุณาเลือกครบทั้ง 6 ข้อ)</div>
-                <p class="text-[11px] text-slate-500 mt-0.5">
-                  <b>หมายเหตุสำคัญ:</b> เว็บเบราว์เซอร์ไม่สามารถอ่านชิปจอหรือเมนูตั้งค่า iOS/Android ได้โดยตรง ผู้ตรวจต้องเปิดดูบนเครื่องจริงแล้วเลือกผลด้านล่างให้ครบทุกข้อ
-                  (เมนู Auto-Brightness บน iPhone อยู่ที่ <b>ตั้งค่า &gt; การช่วยการเข้าถึง (Accessibility) &gt; จอภาพและขนาดข้อความ &gt; ปรับความสว่างอัตโนมัติ</b>)
-                </p>
-              </div>
-
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                <div>
-                  <label class="block text-[11px] font-bold text-slate-700 mb-1">2.1 Auto-Brightness &amp; เซนเซอร์แสง (ALS)</label>
-                  <select id="sel-part-autobright" onchange="updatePartsAuditFromUi('autobright')" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-2.5 py-2 font-semibold text-slate-900">
-                    <option value="" ${!pa.autoBrightness ? 'selected' : ''}>— กรุณาตรวจบนเครื่องแล้วเลือก —</option>
-                    <option value="ok" ${pa.autoBrightness === 'ok' ? 'selected' : ''}>✓ ปกติ (เจอเมนูใน Accessibility + ส่องไฟแล้วจอสว่างขึ้นเอง)</option>
-                    <option value="missing_or_no_react" ${pa.autoBrightness === 'missing_or_no_react' ? 'selected' : ''}>✕ ไม่พบเมนู / ส่องไฟแล้วแสงไม่ปรับ (เสี่ยงจอย้าย IC หรือแพร ALS เสีย -฿1,800)</option>
-                  </select>
-                </div>
-                <div>
-                  <label class="block text-[11px] font-bold text-slate-700 mb-1">2.2 ขอบจอ คางจอล่าง &amp; ความเรียบของกระจก</label>
-                  <select id="sel-part-bezel" onchange="updatePartsAuditFromUi('bezel')" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-2.5 py-2 font-semibold text-slate-900">
-                    <option value="" ${!pa.bezelChin ? 'selected' : ''}>— กรุณาตรวจด้วยตาแล้วเลือก —</option>
-                    <option value="ok" ${pa.bezelChin === 'ok' ? 'selected' : ''}>✓ ขอบจอทั้ง 4 ด้านเท่ากันสนิท จอไม่นูน (มาตรฐาน OLED แท้)</option>
-                    <option value="thick_or_raised" ${pa.bezelChin === 'thick_or_raised' ? 'selected' : ''}>✕ คางจอล่างหนาผิดปกติ / จอนูนจากขอบ / มีคราบกาว (สัญญาณจอเทียบ)</option>
-                  </select>
-                </div>
-                <div>
-                  <label class="block text-[11px] font-bold text-slate-700 mb-1">2.3 สถานะหน้าจอ (Display / ประวัติชิ้นส่วน)</label>
-                  <select id="sel-part-display" onchange="updatePartsAuditFromUi('display')" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-2.5 py-2 font-semibold text-slate-900">
-                    <option value="" ${!pa.display ? 'selected' : ''}>— กรุณาตรวจประวัติชิ้นส่วนแล้วเลือก —</option>
-                    <option value="genuine_orig" ${pa.display === 'genuine_orig' ? 'selected' : ''}>✓ จอแท้เดิมโรงงาน (ไม่ขึ้นประวัติเปลี่ยน + ALS/True Tone ปกติ)</option>
-                    <option value="genuine_replaced" ${pa.display === 'genuine_replaced' ? 'selected' : ''}>● จอแท้เปลี่ยนศูนย์ (Genuine / Used Apple Part)</option>
-                    <option value="ic_swapped" ${pa.display === 'ic_swapped' ? 'selected' : ''}>⚠️ สงสัยจอย้ายชิป IC / เซนเซอร์ ALS ผิดปกติ (-฿1,800)</option>
-                    <option value="fake_display" ${pa.display === 'fake_display' ? 'selected' : ''}>✕ จอเทียบ / จอปลอม (Unknown Part / LCD แสงรั่ว -฿2,800)</option>
-                  </select>
-                </div>
-                <div>
-                  <label class="block text-[11px] font-bold text-slate-700 mb-1">2.4 True Tone / เมนบอร์ด / สแกนนิ้วใต้จอ</label>
-                  <select id="sel-part-board" onchange="updatePartsAuditFromUi('board')" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-2.5 py-2 font-semibold text-slate-900">
-                    <option value="" ${!pa.board ? 'selected' : ''}>— กรุณาตรวจปุ่ม True Tone แล้วเลือก —</option>
-                    <option value="genuine_orig" ${pa.board === 'genuine_orig' ? 'selected' : ''}>✓ ปกติ (มีปุ่ม True Tone / ไม่ขึ้น Unverified Board)</option>
-                    <option value="no_truetone_or_unverified" ${pa.board === 'no_truetone_or_unverified' ? 'selected' : ''}>✕ ปุ่ม True Tone หาย / แจ้งเตือน Unverified Board (-฿1,500)</option>
-                  </select>
-                </div>
-                <div>
-                  <label class="block text-[11px] font-bold text-slate-700 mb-1">2.5 สถานะแบตเตอรี่ (Battery)</label>
-                  <select id="sel-part-battery" onchange="updatePartsAuditFromUi('battery')" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-2.5 py-2 font-semibold text-slate-900">
-                    <option value="" ${!pa.battery ? 'selected' : ''}>— กรุณาตรวจประวัติแบตเตอรี่แล้วเลือก —</option>
-                    <option value="genuine_orig" ${pa.battery === 'genuine_orig' ? 'selected' : ''}>✓ แบตแท้เดิมโรงงาน</option>
-                    <option value="genuine_replaced" ${pa.battery === 'genuine_replaced' ? 'selected' : ''}>● แบตแท้เปลี่ยนศูนย์ (Genuine Part)</option>
-                    <option value="unknown_part" ${pa.battery === 'unknown_part' ? 'selected' : ''}>✕ แบตเทียบ / Unknown Part (-฿1,200)</option>
-                  </select>
-                </div>
-                <div>
-                  <label class="block text-[11px] font-bold text-slate-700 mb-1">2.6 สถานะกล้อง (Camera)</label>
-                  <select id="sel-part-camera" onchange="updatePartsAuditFromUi('camera')" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-2.5 py-2 font-semibold text-slate-900">
-                    <option value="" ${!pa.camera ? 'selected' : ''}>— กรุณาตรวจประวัติกล้องแล้วเลือก —</option>
-                    <option value="genuine_orig" ${pa.camera === 'genuine_orig' ? 'selected' : ''}>✓ กล้องแท้เดิมโรงงาน</option>
-                    <option value="genuine_replaced" ${pa.camera === 'genuine_replaced' ? 'selected' : ''}>● กล้องแท้เปลี่ยนศูนย์ (Genuine / Used)</option>
-                    <option value="unknown_part" ${pa.camera === 'unknown_part' ? 'selected' : ''}>✕ กล้องเทียบ / Unknown Part (-฿1,500)</option>
-                  </select>
-                </div>
-              </div>
-
-              <div class="pt-1 flex flex-wrap items-center justify-between gap-2">
-                <span id="parts-audit-summary-line" class="text-[11px] font-bold text-slate-600">กรุณาตรวจจริงบนเครื่องและเลือกผลให้ครบทั้ง 6 ข้อ</span>
-                <button id="btn-confirm-parts-auth" type="button" onclick="confirmPartsAuthenticityStep()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm">
-                  ยืนยันผลตรวจจอแท้ &amp; อะไหล่
+            <!-- Step 1: 20cm & Edge Feel -->
+            <div class="p-3.5 rounded-2xl bg-white border border-slate-200 space-y-2">
+              <div class="font-extrabold text-[#162944]">1. มองระยะ 20–30 ซม. &amp; ลูบขอบจอ (10 วิ)</div>
+              <p class="text-[11px] text-slate-500">ลูบเล็บข้ามรอยต่อกระจกกับเฟรมโลหะและดูความกว้างคางจอล่าง</p>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <button type="button" onclick="setQuickScreenCheck(1, 'ok')" class="${btnCls(s1 === 'ok', 'ok')}">
+                  ✓ ขอบเรียบสนิท คางจอบางปกติ
+                </button>
+                <button type="button" onclick="setQuickScreenCheck(1, 'thick_or_raised')" class="${btnCls(s1 === 'thick_or_raised', 'warn')}">
+                  ✕ ขอบจอนูนสะดุด / คางจอล่างหนาผิดปกติ
                 </button>
               </div>
             </div>
+
+            <!-- Step 2: OLED Black / Backlight Check -->
+            <div class="p-3.5 rounded-2xl bg-white border border-slate-200 space-y-2">
+              <div class="font-extrabold text-[#162944]">2. เช็กสีขาว &amp; จอดำ OLED ในที่มืด (10 วิ)</div>
+              <p class="text-[11px] text-slate-500">กด "เปิดจอดำ OLED เต็มจอ" ด้านบน — จอแท้ต้องดำสนิทไร้แสงเทาเรืองตามขอบ</p>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <button type="button" onclick="setQuickScreenCheck(2, 'oled_ok')" class="${btnCls(s2 === 'oled_ok', 'ok')}">
+                  ✓ สีสม่ำเสมอ &amp; จอดำสนิท (OLED แท้)
+                </button>
+                <button type="button" onclick="setQuickScreenCheck(2, 'fake_display')" class="${btnCls(s2 === 'fake_display', 'warn')}">
+                  ✕ จอเรืองแสงสีเทา / จอเทียบ LCD (-฿2,800)
+                </button>
+              </div>
+            </div>
+
+            <!-- Step 3: Parts History + True Tone / Auto-Brightness -->
+            <div class="p-3.5 rounded-2xl bg-white border border-slate-200 space-y-2">
+              <div class="font-extrabold text-[#162944]">3. เช็กประวัติชิ้นส่วน + True Tone / Auto-Brightness (10 วิ)</div>
+              <p class="text-[11px] text-slate-500">iPhone: ดู <b>ตั้งค่า &gt; ทั่วไป &gt; เกี่ยวกับ</b> และปุ่ม <b>Auto-Brightness / True Tone</b> · Samsung: เช็กใน <code>*#0*#</code></p>
+              <div class="grid grid-cols-1 gap-2">
+                <button type="button" onclick="setQuickScreenCheck(3, 'genuine_orig')" class="${btnCls(s3 === 'genuine_orig', 'ok')}">
+                  ✓ จอแท้เดิมโรงงาน (ไม่ขึ้นประวัติเปลี่ยน + มี True Tone &amp; Auto-Brightness ปกติ)
+                </button>
+                <button type="button" onclick="setQuickScreenCheck(3, 'genuine_replaced')" class="${btnCls(s3 === 'genuine_replaced', 'info')}">
+                  ● เคยเปลี่ยนจอแท้ศูนย์ (Genuine / Used Apple Part — ไม่หักค่าจอเทียบ)
+                </button>
+                <button type="button" onclick="setQuickScreenCheck(3, 'ic_swapped')" class="${btnCls(s3 === 'ic_swapped', 'warn')}">
+                  ✕ Auto-Brightness / True Tone หาย หรือขึ้น Unknown Part (เสี่ยงจอย้าย IC -฿1,800)
+                </button>
+              </div>
+            </div>
+
+            <!-- Optional Secondary Parts Check (Collapsed by default to keep intake fast) -->
+            <details class="p-3 rounded-2xl bg-slate-50 border border-slate-200 text-[11px]">
+              <summary class="font-bold text-slate-700 cursor-pointer">ตัวเลือกเสริม: พบแบตเทียบ หรือ กล้องเทียบ (ติ๊กเฉพาะเมื่อพบ)</summary>
+              <div class="mt-2.5 flex flex-wrap gap-4">
+                <label class="inline-flex items-center gap-2 font-semibold text-slate-800 cursor-pointer">
+                  <input id="chk-unknown-battery" type="checkbox" onchange="updateQuickScreenSummary()" ${pa.battery === 'unknown_part' ? 'checked' : ''} class="rounded" />
+                  <span>แบตเทียบ / Unknown Battery (-฿1,200)</span>
+                </label>
+                <label class="inline-flex items-center gap-2 font-semibold text-slate-800 cursor-pointer">
+                  <input id="chk-unknown-camera" type="checkbox" onchange="updateQuickScreenSummary()" ${pa.camera === 'unknown_part' ? 'checked' : ''} class="rounded" />
+                  <span>กล้องเทียบ / Unknown Camera (-฿1,500)</span>
+                </label>
+              </div>
+            </details>
+
+            <div class="pt-1 flex flex-wrap items-center justify-between gap-2">
+              <span id="parts-audit-summary-line" class="text-[11px] font-bold text-slate-600">กรุณาแตะเลือกผลตรวจให้ครบทั้ง 3 ขั้นตอน</span>
+              <button id="btn-confirm-parts-auth" type="button" onclick="confirmPartsAuthenticityStep()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 font-bold text-xs shadow-sm">
+                ยืนยันผลตรวจหน้าจอ
+              </button>
+            </div>
           </div>
         `;
-        setTimeout(updatePartsAuditFromUi, 40);
+        setTimeout(updateQuickScreenSummary, 30);
       }
     }
 
@@ -3878,60 +3848,6 @@
       }
     }
 
-    function runDisplayAuthenticityScan() {
-      const hzEl = document.getElementById('auth-val-hz');
-      const p3El = document.getElementById('auth-val-p3');
-      const hdrEl = document.getElementById('auth-val-hdr');
-      const dprEl = document.getElementById('auth-val-dpr');
-      const verdictEl = document.getElementById('auth-scan-verdict');
-
-      if (hzEl) hzEl.textContent = 'กำลังวัด Hz...';
-      const p3 = window.matchMedia && window.matchMedia('(color-gamut: p3)').matches;
-      const hdr = window.matchMedia && window.matchMedia('(dynamic-range: high)').matches;
-      const dpr = Math.round((window.devicePixelRatio || 1) * 100) / 100;
-      state.partsAudit.p3Gamut = p3;
-      state.partsAudit.hdrSupport = hdr;
-      state.partsAudit.dpr = dpr;
-
-      if (p3El) p3El.textContent = p3 ? '✓ รองรับ P3' : '✕ ไม่รองรับ P3';
-      if (hdrEl) hdrEl.textContent = hdr ? '✓ รองรับ HDR' : 'SDR ทั่วไป';
-      if (dprEl) dprEl.textContent = dpr + 'x';
-
-      let frames = 0;
-      const start = performance.now();
-      function sampleFrame(now) {
-        frames++;
-        if (now - start < 750) {
-          requestAnimationFrame(sampleFrame);
-        } else {
-          const fps = Math.round((frames * 1000) / Math.max(1, now - start));
-          const snappedHz = fps >= 105 ? 120 : fps >= 82 ? 90 : 60;
-          state.partsAudit.measuredHz = snappedHz;
-          if (hzEl) hzEl.textContent = `${snappedHz} Hz (${fps} fps)`;
-
-          const is120HzModel = /Pro|Ultra|Fold|Flip|S2[1-6]|Find X|X100|X200|Xiaomi 1[45]/i.test(state.modelName || '');
-          const warnings = [];
-          if (is120HzModel && snappedHz < 90) {
-            warnings.push(`รุ่นนี้ปกติเป็นจอ 120Hz แต่วัดได้ ${snappedHz}Hz (ตรวจว่าเปิดโหมดประหยัดแบตอยู่หรือไม่ หรืออาจเป็นจอเทียบ 60Hz)`);
-          }
-          if (!p3) {
-            warnings.push('เบราว์เซอร์ไม่พบขอบเขตสี Display-P3');
-          }
-          if (verdictEl) {
-            if (warnings.length === 0) {
-              verdictEl.className = 'text-[11px] font-bold px-3 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800';
-              verdictEl.textContent = `✓ สเปกหน้าจอผ่านเกณฑ์จอแท้ (${snappedHz}Hz · Display-P3 · DPR ${dpr}x) — ตรวจสอบประวัติชิ้นส่วนในข้อ 2 ด้านล่างต่อได้เลย`;
-            } else {
-              verdictEl.className = 'text-[11px] font-bold px-3 py-2 rounded-xl bg-amber-50 border border-amber-300 text-amber-900';
-              verdictEl.textContent = 'ข้อสังเกตหน้าจอ: ' + warnings.join(' · ');
-            }
-          }
-          unlockCurrentStepPass(`สแกนจอ ${snappedHz}Hz แล้ว`);
-        }
-      }
-      requestAnimationFrame(sampleFrame);
-    }
-
     function openOledBlackTest() {
       const ov = document.getElementById('fullscreen-test-overlay');
       if (!ov) return;
@@ -3956,111 +3872,102 @@
       `;
     }
 
-    function updatePartsAuditFromUi(changedField) {
-      const d = document.getElementById('sel-part-display');
-      const b = document.getElementById('sel-part-battery');
-      const c = document.getElementById('sel-part-camera');
-      const bd = document.getElementById('sel-part-board');
-      const ab = document.getElementById('sel-part-autobright');
-      const bz = document.getElementById('sel-part-bezel');
+    function setQuickScreenCheck(stepNo, val) {
+      if (stepNo === 1) state.partsAudit.bezelChin = val;
+      if (stepNo === 2) state.partsAudit.oledVerdict = val;
+      if (stepNo === 3) state.partsAudit.sysVerdict = val;
+      syncQuickScreenToAuditState();
+      renderRunnerStage();
+    }
 
-      if (d) state.partsAudit.display = d.value;
-      if (b) state.partsAudit.battery = b.value;
-      if (c) state.partsAudit.camera = c.value;
-      if (bd) state.partsAudit.board = bd.value;
-      if (ab) state.partsAudit.autoBrightness = ab.value;
-      if (bz) state.partsAudit.bezelChin = bz.value;
+    function syncQuickScreenToAuditState() {
+      const pa = state.partsAudit;
+      const chkBat = document.getElementById('chk-unknown-battery');
+      const chkCam = document.getElementById('chk-unknown-camera');
+      if (chkBat) pa.battery = chkBat.checked ? 'unknown_part' : 'genuine_orig';
+      if (chkCam) pa.camera = chkCam.checked ? 'unknown_part' : 'genuine_orig';
 
-      // Prevent contradiction: if 2.1 (Auto-Brightness/ALS) or 2.2 (Bezel) fails, never leave 2.3 Display on "genuine_orig"
-      const alsOrBezelFailed =
-        state.partsAudit.autoBrightness === 'missing_or_no_react' ||
-        state.partsAudit.bezelChin === 'thick_or_raised';
-      if (alsOrBezelFailed && (state.partsAudit.display === 'genuine_orig' || state.partsAudit.display === '')) {
-        state.partsAudit.display = 'ic_swapped';
-        if (d) d.value = 'ic_swapped';
+      pa.autoBrightness = pa.sysVerdict === 'ic_swapped' ? 'missing_or_no_react' : (pa.sysVerdict ? 'ok' : '');
+      pa.board = pa.sysVerdict === 'ic_swapped' ? 'no_truetone_or_unverified' : (pa.sysVerdict ? 'genuine_orig' : '');
+
+      if (pa.oledVerdict === 'fake_display') {
+        pa.display = 'fake_display';
+      } else if (pa.sysVerdict === 'ic_swapped' || pa.bezelChin === 'thick_or_raised') {
+        pa.display = 'ic_swapped';
+      } else if (pa.sysVerdict === 'genuine_replaced') {
+        pa.display = 'genuine_replaced';
+      } else if (pa.bezelChin === 'ok' && pa.oledVerdict === 'oled_ok' && pa.sysVerdict === 'genuine_orig') {
+        pa.display = 'genuine_orig';
+      } else {
+        pa.display = '';
       }
+    }
 
-      const missingCount = [
-        state.partsAudit.autoBrightness,
-        state.partsAudit.bezelChin,
-        state.partsAudit.display,
-        state.partsAudit.board,
-        state.partsAudit.battery,
-        state.partsAudit.camera
-      ].filter(v => !v).length;
+    function updateQuickScreenSummary() {
+      syncQuickScreenToAuditState();
+      const pa = state.partsAudit;
+      const missing = [!pa.bezelChin, !pa.oledVerdict, !pa.sysVerdict].filter(Boolean).length;
+      const hasAnomaly =
+        pa.display === 'fake_display' ||
+        pa.display === 'ic_swapped' ||
+        pa.battery === 'unknown_part' ||
+        pa.camera === 'unknown_part';
 
-      const suspectedIcSwap =
-        state.partsAudit.display === 'ic_swapped' || alsOrBezelFailed;
-
-      const hasFakeOrUnknown =
-        state.partsAudit.display === 'fake_display' ||
-        suspectedIcSwap ||
-        state.partsAudit.battery === 'unknown_part' ||
-        state.partsAudit.camera === 'unknown_part' ||
-        state.partsAudit.board === 'no_truetone_or_unverified';
-
-      if (missingCount === 0) {
-        state.cosmetics.parts = hasFakeOrUnknown ? 'non_genuine' : 'genuine';
+      if (missing === 0) {
+        state.cosmetics.parts = hasAnomaly ? 'non_genuine' : 'genuine';
         const radioParts = document.querySelector(`input[name="cos_parts"][value="${state.cosmetics.parts}"]`);
         if (radioParts) radioParts.checked = true;
       }
 
       const sumEl = document.getElementById('parts-audit-summary-line');
       if (sumEl) {
-        if (missingCount > 0) {
+        if (missing > 0) {
           sumEl.className = 'text-[11px] font-bold text-slate-600';
-          sumEl.textContent = `ยังไม่ได้เลือก ${missingCount}/6 ข้อ — กรุณาตรวจจริงบนเครื่องให้ครบก่อนยืนยัน`;
-        } else if (state.partsAudit.display === 'fake_display') {
+          sumEl.textContent = `เหลืออีก ${missing}/3 ขั้นตอน — แตะเลือกให้ครบก่อนยืนยัน`;
+        } else if (pa.display === 'fake_display') {
           sumEl.className = 'text-[11px] font-bold text-rose-700';
-          sumEl.textContent = '✕ พบจอเทียบ/จอปลอม (หัก -฿2,800 · จำกัดสูงสุด Grade C)';
-        } else if (suspectedIcSwap) {
+          sumEl.textContent = '✕ พบจอเทียบ / จอปลอม LCD (หัก -฿2,800 · จำกัดสูงสุด Grade C)';
+        } else if (pa.display === 'ic_swapped') {
           sumEl.className = 'text-[11px] font-bold text-amber-800';
-          sumEl.textContent = '⚠️ ตรวจพบสัญญาณจอย้าย IC / เซนเซอร์แสง ALS ผิดปกติ (หัก -฿1,800 · จำกัดสูงสุด Grade C)';
-        } else if (hasFakeOrUnknown) {
+          sumEl.textContent = '⚠️ พบสัญญาณจอย้าย IC / ขอบจอนูน / ALS หาย (หัก -฿1,800 · จำกัดสูงสุด Grade C)';
+        } else if (hasAnomaly) {
           sumEl.className = 'text-[11px] font-bold text-amber-700';
-          sumEl.textContent = 'พบการเปลี่ยนอะไหล่เทียบ / Unknown Part (คำนวณหักลดในใบรายงานอัตโนมัติ)';
-        } else if (state.partsAudit.display === 'genuine_replaced' || state.partsAudit.battery === 'genuine_replaced' || state.partsAudit.camera === 'genuine_replaced') {
+          sumEl.textContent = 'พบอะไหล่เทียบ (แบต/กล้อง) — หักลดในใบรายงานอัตโนมัติ';
+        } else if (pa.display === 'genuine_replaced') {
           sumEl.className = 'text-[11px] font-bold text-teal-700';
-          sumEl.textContent = '● เคยเปลี่ยนอะไหล่แท้ศูนย์ (Genuine Part — ผ่านเกณฑ์)';
+          sumEl.textContent = '● เคยเปลี่ยนจอแท้ศูนย์ (Genuine Part — ผ่านเกณฑ์)';
         } else {
           sumEl.className = 'text-[11px] font-bold text-emerald-700';
-          sumEl.textContent = '✓ จอแท้เดิมโรงงาน + เซนเซอร์ ALS/True Tone ปกติครบทุกจุด';
+          sumEl.textContent = '✓ จอแท้เดิมโรงงาน ผ่านครบทั้ง 3 ขั้นตอน';
         }
       }
 
-      if (missingCount === 0) {
-        unlockCurrentStepPass(hasFakeOrUnknown ? 'บันทึกจุดสังเกตอะไหล่แล้ว' : 'จอแท้ & ALS ปกติ');
+      if (missing === 0) {
+        unlockCurrentStepPass(hasAnomaly ? 'บันทึกจุดสังเกตหน้าจอแล้ว' : 'จอแท้ผ่านครบ 3 ขั้นตอน');
       }
     }
 
-    function confirmPartsAuthenticityStep() {
-      updatePartsAuditFromUi();
-      const missingCount = [
-        state.partsAudit.autoBrightness,
-        state.partsAudit.bezelChin,
-        state.partsAudit.display,
-        state.partsAudit.board,
-        state.partsAudit.battery,
-        state.partsAudit.camera
-      ].filter(v => !v).length;
+    function updatePartsAuditFromUi() {
+      updateQuickScreenSummary();
+    }
 
-      if (missingCount > 0) {
-        showToast(`กรุณาตรวจจริงบนเครื่องและเลือกผลให้ครบทั้ง 6 ข้อ (เหลืออีก ${missingCount} ข้อ)`);
+    function confirmPartsAuthenticityStep() {
+      updateQuickScreenSummary();
+      const pa = state.partsAudit;
+      const missing = [!pa.bezelChin, !pa.oledVerdict, !pa.sysVerdict].filter(Boolean).length;
+      if (missing > 0) {
+        showToast(`กรุณาแตะเลือกผลตรวจหน้าจอให้ครบทั้ง 3 ขั้นตอน (เหลืออีก ${missing} ข้อ)`);
         return;
       }
-
       const hasAnomaly =
-        state.partsAudit.display === 'fake_display' ||
-        state.partsAudit.display === 'ic_swapped' ||
-        state.partsAudit.autoBrightness === 'missing_or_no_react' ||
-        state.partsAudit.bezelChin === 'thick_or_raised' ||
-        state.partsAudit.battery === 'unknown_part' ||
-        state.partsAudit.camera === 'unknown_part' ||
-        state.partsAudit.board === 'no_truetone_or_unverified';
+        pa.display === 'fake_display' ||
+        pa.display === 'ic_swapped' ||
+        pa.battery === 'unknown_part' ||
+        pa.camera === 'unknown_part';
       if (hasAnomaly) {
         markCurrentTest('fail');
       } else {
-        unlockCurrentStepPass('จอแท้ & อะไหล่ปกติ');
+        unlockCurrentStepPass('จอแท้ผ่านครบ 3 ขั้นตอน');
         markCurrentTest('pass');
       }
     }
