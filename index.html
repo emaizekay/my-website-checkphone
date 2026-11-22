@@ -55,7 +55,7 @@
     .bg-blue-600, .bg-indigo-600, .bg-blue-700, .bg-slate-900 {
       background-color: var(--p-sky) !important;
       color: #1F324D !important;
-      border: 1px solid #A8C8F5 !important;
+      border: 1.5px solid #8EB6EB !important;
     }
     .hover\:bg-blue-700:hover, .hover\:bg-indigo-700:hover, .hover\:bg-blue-800:hover, .hover\:bg-slate-800:hover {
       background-color: #B0D0FF !important;
@@ -76,7 +76,7 @@
     .bg-emerald-600, .bg-emerald-500 {
       background-color: var(--p-mint) !important;
       color: #1E4631 !important;
-      border: 1px solid #B0D6B8 !important;
+      border: 1.5px solid #8BC499 !important;
     }
     .hover\:bg-emerald-700:hover {
       background-color: #C0DFC6 !important;
@@ -96,7 +96,7 @@
     .bg-amber-500, .bg-amber-400 {
       background-color: var(--p-peach) !important;
       color: #5E3A19 !important;
-      border: 1px solid #F2C99D !important;
+      border: 1.5px solid #E2B380 !important;
     }
     .hover\:bg-amber-600:hover, .hover\:bg-amber-300:hover {
       background-color: #F7D0A6 !important;
@@ -116,7 +116,7 @@
     .bg-rose-600 {
       background-color: var(--p-blush) !important;
       color: #6E2339 !important;
-      border: 1px solid #E8AFC0 !important;
+      border: 1.5px solid #DC96AB !important;
     }
     .hover\:bg-rose-700:hover {
       background-color: #EEB6C4 !important;
@@ -147,11 +147,36 @@
     .to-slate-900, .to-blue-950, .to-indigo-950 {
       --tw-gradient-to: #AFC3C4 !important;
     }
-    /* Ensure text inside pastel-converted banners/modals stays crisp dark charcoal */
-    .from-slate-900.text-white, .from-emerald-900.text-white, .bg-slate-900.text-white,
-    .bg-\[\#0F172A\].text-white {
-      color: #2D3142 !important;
+    /* STRICT WCAG AAA CONTRAST FIX: Override .text-white on ALL pastel backgrounds so text is razor-sharp & readable */
+    .bg-blue-600, .bg-blue-600 *, .bg-indigo-600, .bg-indigo-600 *, .bg-blue-700, .bg-blue-700 *,
+    .bg-slate-900, .bg-slate-900 * {
+      color: #162944 !important;
     }
+    .bg-emerald-600, .bg-emerald-600 *, .bg-emerald-500, .bg-emerald-500 * {
+      color: #143A26 !important;
+    }
+    .bg-amber-500, .bg-amber-500 *, .bg-amber-400, .bg-amber-400 * {
+      color: #4A2B0F !important;
+    }
+    .bg-rose-600, .bg-rose-600 * {
+      color: #5C192D !important;
+    }
+    .from-slate-900, .from-slate-900 *, .from-emerald-900, .from-emerald-900 *,
+    .bg-\[\#0F172A\], .bg-\[\#0F172A\] * {
+      color: #1E2433 !important;
+    }
+    /* Keep dark toast notification readable with light text on deep charcoal */
+    #toast-container > div {
+      background-color: #2D3142 !important;
+      color: #FFFFFF !important;
+      border-color: #464C63 !important;
+    }
+    #toast-container > div * { color: #FFFFFF !important; }
+    #toast-container #toast-icon { color: #D4E9D8 !important; }
+    /* Keep fullscreen dark touch & RGB overlays untouched */
+    #fullscreen-test-overlay .text-white { color: #FFFFFF !important; }
+    #fullscreen-test-overlay .touch-cell { color: #E2E8F0 !important; }
+    #fullscreen-test-overlay .touch-cell.touched { color: #143A26 !important; }
     .accent-blue-600, .accent-emerald-600 { accent-color: #8CA8C8 !important; }
     .ring-blue-600, .ring-blue-500, .ring-cyan-400 { --tw-ring-color: #AFC3C4 !important; }
 
@@ -352,6 +377,53 @@
                 <div id="detected-candidate-chips" class="hidden flex-wrap items-center gap-1.5 pt-1 border-t border-teal-200/70"></div>
               </div>
 
+              <!-- PC/Mac USB Diagnostic Station Panel (3uTools-Style Plug-in Mode) -->
+              <div id="usb-station-panel" class="p-4 rounded-2xl bg-[#E8F1FF]/75 border border-[#8EB6EB] space-y-3 text-xs">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                  <div class="flex items-center gap-2.5">
+                    <span class="w-8 h-8 rounded-xl bg-[#C4DCFF] border border-[#8EB6EB] text-[#162944] inline-flex items-center justify-center shrink-0">
+                      <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v14"/><path d="m8 6 4-4 4 4"/><circle cx="12" cy="19" r="3"/><path d="M5 10h2a2 2 0 0 1 2 2v2"/><path d="M19 10h-2a2 2 0 0 0-2 2v2"/></svg>
+                    </span>
+                    <div>
+                      <div class="flex flex-wrap items-center gap-1.5">
+                        <span class="font-extrabold text-[#162944] text-xs sm:text-sm">โหมดเสียบสายหน้าคอม (USB Station — แบบ 3uTools)</span>
+                        <span id="usb-station-status-badge" class="px-2 py-0.5 rounded-full bg-[#FFF0CA] text-[#4A2B0F] border border-[#E2B380] font-bold text-[10px]">
+                          กำลังเช็กโปรแกรมบนคอม...
+                        </span>
+                      </div>
+                      <p class="text-[11px] text-[#334155] mt-0.5">
+                        เสียบสาย iPhone / iPad / Android เข้าคอมเพื่อดึงรุ่น, โซน TH/A, IMEI/SN, ความจุ, แบต % &amp; รอบชาร์จจริง และเช็กเซนเซอร์อัตโนมัติ
+                      </p>
+                    </div>
+                  </div>
+                  <div class="flex flex-wrap items-center gap-1.5">
+                    <button type="button" onclick="scanViaUsbStation()" class="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 font-bold text-xs shadow-sm transition inline-flex items-center gap-1.5">
+                      <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                      <span>สแกนผ่านสาย USB</span>
+                    </button>
+                    <button type="button" onclick="runUsbStationDemo('iphone')" class="px-2.5 py-2 rounded-xl bg-white hover:bg-slate-50 text-[#1E2433] border border-[#8EB6EB] font-bold text-[11px] transition">
+                      ตัวอย่าง iPhone
+                    </button>
+                    <button type="button" onclick="runUsbStationDemo('samsung')" class="px-2.5 py-2 rounded-xl bg-white hover:bg-slate-50 text-[#1E2433] border border-[#8EB6EB] font-bold text-[11px] transition">
+                      ตัวอย่าง Samsung
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Live 3uTools-Style USB Verification Report Output -->
+                <div id="usb-station-report" class="hidden rounded-xl bg-white/95 border border-[#C6CFE0] p-3 space-y-2.5">
+                  <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-200">
+                    <div id="usb-report-headline" class="font-extrabold text-[#162944] text-xs">-</div>
+                    <span id="usb-report-driver-tag" class="px-2 py-0.5 rounded-full bg-[#D4E9D8] text-[#143A26] border border-[#8BC499] font-bold text-[10px]">USB Verified</span>
+                  </div>
+                  <div id="usb-report-kpi-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]"></div>
+                  <div id="usb-report-rows" class="divide-y divide-slate-100 text-[11px]"></div>
+                  <div class="text-[10px] text-[#4E5568] bg-[#FFF0CA]/60 border border-[#E2B380] rounded-lg px-2.5 py-1.5">
+                    <b>หมายเหตุมาตรฐานการตรวจ:</b> ข้อมูลเครื่อง, แบตเตอรี่ % / รอบชาร์จ และเซนเซอร์ Kernel ถูกกรอกให้อัตโนมัติแล้ว — แนะนำให้ตรวจด้วยตา/หูเพิ่มเติมเฉพาะ 3 จุดกายภาพ (รอยแตก/เดดพิกเซล, ลำโพง/ไมค์, และ Auto-Brightness/True Tone บน iPhone)
+                  </div>
+                </div>
+              </div>
+
               <!-- Form Box -->
               <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200 space-y-3.5 text-xs">
 
@@ -440,7 +512,7 @@
                       <a href="https://checkcoverage.apple.com/" target="_blank" rel="noopener" class="text-[10px] font-semibold text-teal-700 underline">เช็กประกัน/สี Apple</a>
                     </div>
                     <input id="input-imei" type="text" oninput="handleImeiOrSnInput(this.value)" placeholder="กด *#06# เพื่อกรอก IMEI 15 หลัก หรือ SN (ตรวจความถูกต้องอัตโนมัติ)" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 font-mono font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                    <div id="imei-validation-hint" class="mt-1 text-[10px] text-slate-500">เบราว์เซอร์ไม่สามารถดึง IMEI อัตโนมัติได้ (กรอกเลข 15 หลักเพื่อตรวจ Luhn หรือเสียบสาย USB ผ่านตัวช่วยด้านล่าง)</div>
+                    <div id="imei-validation-hint" class="mt-1 text-[10px] text-slate-500">กด *#06# บนมือถือแล้วกรอกเลข 15 หลัก ระบบจะตรวจสอบความถูกต้องด้วยสูตร Luhn อัตโนมัติ</div>
                   </div>
                   <div>
                     <label for="input-device-color" class="block text-slate-700 font-bold mb-1">6. สีตัวเครื่อง (Color) — แตะเลือกสีแท้ตามรุ่น</label>
@@ -449,27 +521,7 @@
                   </div>
                 </div>
 
-                <!-- Row 4: Live Battery Health Inspector & 3uTools-Style USB Hardware Bridge Strip -->
-                <div class="p-3 rounded-xl bg-white border border-slate-200 space-y-2">
-                  <div class="flex flex-wrap items-center justify-between gap-2">
-                    <div class="flex items-center gap-2">
-                      <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                      <span class="font-bold text-slate-800 text-[11px]">สุขภาพแบตเตอรี่ &amp; อ่านค่าฮาร์ดแวร์เชิงลึก (สไตล์ 3uTools)</span>
-                    </div>
-                    <div class="flex flex-wrap items-center gap-1.5">
-                      <button type="button" onclick="runLiveBatteryProbe()" class="px-2.5 py-1 rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 font-bold text-[10px] transition">
-                        วัดสถานะแบตหน้าเว็บ
-                      </button>
-                      <button type="button" onclick="openUsbBridgeModal()" class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-bold text-[10px] transition">
-                        ดึงค่าเต็มแบบ 3uTools (USB / Import)
-                      </button>
-                    </div>
-                  </div>
-                  <div id="home-battery-live-readout" class="text-[11px] text-slate-600 flex flex-wrap items-center justify-between gap-2">
-                    <span>ระดับแบตปัจจุบัน: <b id="home-bat-pct">กำลังอ่าน...</b> · สุขภาพแบตที่บันทึก: <b id="home-bat-health-val" class="text-emerald-700">90%</b></span>
-                    <span class="text-[10px] text-slate-400">iPad/Android ที่ไม่โชว์ % สุขภาพแบต ให้ใช้โหมด USB Bridge (ในไฟล์ .zip)</span>
-                  </div>
-                </div>
+
 
                 <!-- Auto-Detected Browser Info Strip (Reference Only) -->
                 <div class="pt-2 border-t border-slate-200/80 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500">
@@ -820,20 +872,45 @@
             </div>
           </div>
 
-          <!-- 4. Battery Health % (Back Market Premium 90% / CompAsia 85% / Standard 80%) -->
+          <!-- 4. Battery Health (Supports Both iPhone % AND Samsung/Android Status without %!) -->
           <div class="border border-slate-200 rounded-2xl p-4 space-y-3">
-            <div class="flex items-center justify-between">
-              <span class="font-bold text-sm text-slate-900">4. สุขภาพแบตเตอรี่ (Battery Health %)</span>
-              <span id="battery-health-label" class="text-base font-black text-emerald-600">90% (Premium A+)</span>
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <span class="font-bold text-sm text-slate-900">4. สุขภาพแบตเตอรี่ (Battery Health)</span>
+              <span id="battery-health-label" class="text-sm font-extrabold text-emerald-700">90% (Premium A+)</span>
             </div>
-            <div>
+
+            <!-- Mode Switcher: iPhone % vs Samsung/Android Status -->
+            <div class="grid grid-cols-2 gap-1.5 text-[11px]">
+              <button id="bat-mode-btn-pct" type="button" onclick="setBatteryInputMode('percent')" class="py-1.5 px-2 rounded-xl bg-blue-600 font-bold">
+                แบบตัวเลข % (iPhone / Android ที่มี %)
+              </button>
+              <button id="bat-mode-btn-status" type="button" onclick="setBatteryInputMode('status')" class="py-1.5 px-2 rounded-xl bg-slate-100 text-slate-700 font-semibold border border-slate-200">
+                แบบสถานะ (Samsung / Android ไม่มี %)
+              </button>
+            </div>
+
+            <!-- Panel A: Percentage Slider -->
+            <div id="bat-panel-percent">
               <input id="input-battery-health" type="range" min="50" max="100" value="90" oninput="updateCosmetics()" class="w-full accent-emerald-600 cursor-pointer" />
-              <div class="flex justify-between text-[10px] text-slate-500 mt-1.5">
+              <div class="flex justify-between text-[10px] text-slate-500 mt-1">
                 <span>&lt;80% (หักค่าแบต)</span>
                 <span>80–84% (Grade B)</span>
                 <span>85–89% (Grade A)</span>
                 <span>90%+ (Mint A+)</span>
               </div>
+            </div>
+
+            <!-- Panel B: Android / Samsung Diagnostic Status (No % needed!) -->
+            <div id="bat-panel-status" class="hidden space-y-1.5 text-xs">
+              <p class="text-[10px] text-slate-500">
+                <b>Samsung:</b> เปิด <b>การตั้งค่า &gt; การดูแลอุปกรณ์ &gt; การวินิจฉัย (Samsung Members) &gt; สถานะแบตเตอรี่</b> (หรือ Android รุ่นอื่นให้ดูอาการแบตลดไว/บวม)
+              </p>
+              <select id="select-android-bat-status" onchange="updateCosmetics()" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 font-bold text-slate-900">
+                <option value="normal" selected>✓ ปกติ (Normal / Good — เทียบเท่าเกณฑ์ Grade A)</option>
+                <option value="weak">⚠️ เริ่มเสื่อม (Weak / Action Required — เทียบเท่า &lt;80% หัก -฿1,200)</option>
+                <option value="bad">✕ เสื่อมหนัก / แบตบวม (Bad — ปรับลง Grade D)</option>
+                <option value="na">● รุ่นนี้ไม่แสดงสุขภาพแบต (ไม่หักคะแนน ประเมินตามสภาพจริง)</option>
+              </select>
             </div>
           </div>
 
@@ -1626,16 +1703,18 @@
         body: 'flawless',
         lock: 'unlocked',
         batteryHealth: 90,
+        batteryMode: 'percent',
+        androidBatStatus: 'normal',
         parts: 'genuine',
         water: 'dry'
       },
       partsAudit: {
-        display: 'genuine_orig',   // genuine_orig | genuine_replaced | ic_swapped | fake_display
-        battery: 'genuine_orig',   // genuine_orig | genuine_replaced | unknown_part
-        camera: 'genuine_orig',    // genuine_orig | genuine_replaced | unknown_part
-        board: 'genuine_orig',     // genuine_orig | no_truetone_or_unverified
-        autoBrightness: 'ok',      // ok | missing_or_no_react
-        bezelChin: 'ok',           // ok | thick_or_raised
+        display: '',               // '' | genuine_orig | genuine_replaced | ic_swapped | fake_display
+        battery: '',               // '' | genuine_orig | genuine_replaced | unknown_part
+        camera: '',                // '' | genuine_orig | genuine_replaced | unknown_part
+        board: '',                 // '' | genuine_orig | no_truetone_or_unverified
+        autoBrightness: '',        // '' | ok | missing_or_no_react
+        bezelChin: '',             // '' | ok | thick_or_raised
         measuredHz: 0,
         p3Gamut: false,
         hdrSupport: false,
@@ -2140,11 +2219,9 @@
           const b = await navigator.getBattery();
           const pct = Math.round(b.level * 100);
           batTxt = `แบต ${pct}%${b.charging ? ' (กำลังชาร์จ)' : ''}`;
-          const hBat = document.getElementById('home-bat-pct');
-          if (hBat) hBat.textContent = `${pct}%${b.charging ? ' · กำลังชาร์จ' : ''}`;
+          
         } else {
-          const hBat = document.getElementById('home-bat-pct');
-          if (hBat) hBat.textContent = /iPhone|iPad/i.test(ua) ? 'iOS ปิดกั้นการอ่านผ่านเว็บ (ดูใน ตั้งค่า > แบตเตอรี่ หรือเสียบ USB Bridge)' : 'ไม่รองรับ Web Battery API';
+          
         }
       } catch (e) {}
 
@@ -2653,22 +2730,22 @@
           <div class="max-w-lg w-full text-center space-y-3 p-3">
             <div class="text-base font-bold text-slate-800">ทดสอบเซนเซอร์แนบหู (Proximity) &amp; เซนเซอร์เอียงเครื่อง (Gyro)</div>
 
-            <!-- 1. Real Optical Proximity Sensor via Front Camera Luminance Drop -->
+            <!-- 1. Accurate Physical Proximity Sensor Check (Honest Hardware Check — does NOT fake it with front camera!) -->
             <div class="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 space-y-2.5 text-xs text-left">
-              <div class="flex items-center justify-between gap-2">
-                <span class="font-extrabold text-emerald-950">1. ทดสอบ Proximity Sensor จริง (วัดการบังแสงส่วนบนของจอ)</span>
-                <span id="prox-lux-badge" class="px-2 py-0.5 rounded-full bg-white text-emerald-800 font-mono font-bold text-[11px] border border-emerald-300">แสง: รอเปิดเซนเซอร์</span>
-              </div>
+              <div class="font-extrabold text-emerald-950">1. ทดสอบ Proximity Sensor จริง (เซนเซอร์อินฟราเรดดับจอตอนแนบหู)</div>
               <p class="text-slate-600 text-[11px]">
-                กดปุ่ม <b>"เปิดเซนเซอร์วัดระยะแนบหู"</b> ด้านล่าง แล้ว <b>นำฝ่ามือมาบังด้านบนของหน้าจอ (ปิดบังกล้องหน้า)</b> ให้แถบวัดแสงลดลงต่ำกว่า 35% ระบบจะผ่านด่านให้อัตโนมัติทันที
+                <b>หมายเหตุความแม่นยำ:</b> เว็บเบราว์เซอร์ไม่สามารถสั่งอ่านเซนเซอร์อินฟราเรด Proximity โดยตรงได้ (การเอามือบังกล้องหน้าวัดได้แค่แสงกล้อง ไม่ใช่เซนเซอร์แนบหู) ให้ทดสอบจริงดังนี้:
               </p>
-              <div class="w-full bg-slate-200 h-4 rounded-full overflow-hidden p-0.5">
-                <div id="prox-light-bar" class="bg-emerald-600 h-full rounded-full transition-all duration-100" style="width:100%;"></div>
-              </div>
-              <video id="prox-cam-video" autoplay playsinline muted class="w-1 h-1 opacity-0 pointer-events-none absolute"></video>
-              <div class="flex flex-wrap gap-2">
-                <button type="button" onclick="startRealProximityCameraSensor()" class="flex-1 py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-sm">
-                  ✋ 1. เปิดเซนเซอร์วัดระยะแนบหู (ใช้มือบังส่วนบนของจอ)
+              <ul class="list-disc list-inside text-[11px] text-slate-700 space-y-1">
+                <li><b>iPhone:</b> โทรออกหรือกดเล่นเสียงในแอป <i>เสียงบันทึก (Voice Memos)</i> แล้วนำมือบังบริเวณลำโพงบน — <b>หน้าจอต้องดับมืดเองทันที</b></li>
+                <li><b>Samsung / Android:</b> กด <code>*#0*#</code> &gt; แตะ <b>Sensor</b> &gt; นำมือบังด้านบนจอ — <b>จอต้องเปลี่ยนเป็นสีเขียวและสั่น</b></li>
+              </ul>
+              <div class="grid grid-cols-2 gap-2 pt-1">
+                <button type="button" onclick="triggerProximitySensorPass()" class="py-2.5 px-3 rounded-xl bg-emerald-600 font-bold text-xs shadow-sm">
+                  ✓ จอดับเองปกติ (Proximity ผ่าน)
+                </button>
+                <button type="button" onclick="markCurrentTest('fail')" class="py-2.5 px-3 rounded-xl bg-rose-600 font-bold text-xs shadow-sm">
+                  ✕ จอไม่ดับ (Proximity เสีย)
                 </button>
               </div>
             </div>
@@ -2800,12 +2877,12 @@
               </div>
             </div>
 
-            <!-- 2. Forensic Anti-IC-Swap Check (Auto-Brightness ALS, True Tone, Bezel/Chin — works without 3uTools!) -->
+            <!-- 2. Forensic Anti-IC-Swap Check (Manual Inspector Verification — No Auto-Fill!) -->
             <div class="p-4 rounded-2xl bg-white border border-slate-200 space-y-3 text-xs">
               <div>
-                <div class="font-extrabold text-slate-900">2. ตรวจจับ "จอย้ายชิป IC" และเซนเซอร์แสง ALS (ไม่ต้องพึ่ง 3uTools)</div>
+                <div class="font-extrabold text-slate-900">2. บันทึกผลตรวจจริงโดยผู้ตรวจ (ระบบไม่ได้กรอกให้อัตโนมัติ — กรุณาเลือกครบทั้ง 6 ข้อ)</div>
                 <p class="text-[11px] text-slate-500 mt-0.5">
-                  หากร้านซ่อมย้ายชิป IC จากจอเดิมมาใส่จอใหม่ หน้าตั้งค่าจะ <b>ไม่ขึ้นแจ้งเตือน Unknown Part</b> ให้ตรวจจับด้วย 3 จุดนี้แทน:
+                  <b>หมายเหตุสำคัญ:</b> เว็บเบราว์เซอร์ไม่สามารถอ่านชิปจอหรือเมนูตั้งค่า iOS/Android ได้โดยตรง ผู้ตรวจต้องเปิดดูบนเครื่องจริงแล้วเลือกผลด้านล่างให้ครบทุกข้อ
                   (เมนู Auto-Brightness บน iPhone อยู่ที่ <b>ตั้งค่า &gt; การช่วยการเข้าถึง (Accessibility) &gt; จอภาพและขนาดข้อความ &gt; ปรับความสว่างอัตโนมัติ</b>)
                 </p>
               </div>
@@ -2813,37 +2890,42 @@
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 <div>
                   <label class="block text-[11px] font-bold text-slate-700 mb-1">2.1 Auto-Brightness &amp; เซนเซอร์แสง (ALS)</label>
-                  <select id="sel-part-autobright" onchange="updatePartsAuditFromUi()" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-2.5 py-2 font-semibold text-slate-900">
+                  <select id="sel-part-autobright" onchange="updatePartsAuditFromUi('autobright')" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-2.5 py-2 font-semibold text-slate-900">
+                    <option value="" ${!pa.autoBrightness ? 'selected' : ''}>— กรุณาตรวจบนเครื่องแล้วเลือก —</option>
                     <option value="ok" ${pa.autoBrightness === 'ok' ? 'selected' : ''}>✓ ปกติ (เจอเมนูใน Accessibility + ส่องไฟแล้วจอสว่างขึ้นเอง)</option>
                     <option value="missing_or_no_react" ${pa.autoBrightness === 'missing_or_no_react' ? 'selected' : ''}>✕ ไม่พบเมนู / ส่องไฟแล้วแสงไม่ปรับ (เสี่ยงจอย้าย IC หรือแพร ALS เสีย -฿1,800)</option>
                   </select>
                 </div>
                 <div>
                   <label class="block text-[11px] font-bold text-slate-700 mb-1">2.2 ขอบจอ คางจอล่าง &amp; ความเรียบของกระจก</label>
-                  <select id="sel-part-bezel" onchange="updatePartsAuditFromUi()" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-2.5 py-2 font-semibold text-slate-900">
+                  <select id="sel-part-bezel" onchange="updatePartsAuditFromUi('bezel')" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-2.5 py-2 font-semibold text-slate-900">
+                    <option value="" ${!pa.bezelChin ? 'selected' : ''}>— กรุณาตรวจด้วยตาแล้วเลือก —</option>
                     <option value="ok" ${pa.bezelChin === 'ok' ? 'selected' : ''}>✓ ขอบจอทั้ง 4 ด้านเท่ากันสนิท จอไม่นูน (มาตรฐาน OLED แท้)</option>
                     <option value="thick_or_raised" ${pa.bezelChin === 'thick_or_raised' ? 'selected' : ''}>✕ คางจอล่างหนาผิดปกติ / จอนูนจากขอบ / มีคราบกาว (สัญญาณจอเทียบ)</option>
                   </select>
                 </div>
                 <div>
                   <label class="block text-[11px] font-bold text-slate-700 mb-1">2.3 สถานะหน้าจอ (Display / ประวัติชิ้นส่วน)</label>
-                  <select id="sel-part-display" onchange="updatePartsAuditFromUi()" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-2.5 py-2 font-semibold text-slate-900">
+                  <select id="sel-part-display" onchange="updatePartsAuditFromUi('display')" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-2.5 py-2 font-semibold text-slate-900">
+                    <option value="" ${!pa.display ? 'selected' : ''}>— กรุณาตรวจประวัติชิ้นส่วนแล้วเลือก —</option>
                     <option value="genuine_orig" ${pa.display === 'genuine_orig' ? 'selected' : ''}>✓ จอแท้เดิมโรงงาน (ไม่ขึ้นประวัติเปลี่ยน + ALS/True Tone ปกติ)</option>
                     <option value="genuine_replaced" ${pa.display === 'genuine_replaced' ? 'selected' : ''}>● จอแท้เปลี่ยนศูนย์ (Genuine / Used Apple Part)</option>
-                    <option value="ic_swapped" ${pa.display === 'ic_swapped' ? 'selected' : ''}>⚠️ สงสัยจอย้ายชิป IC (ไม่ขึ้นประวัติ แต่เซนเซอร์/ขอบจอผิดปกติ -฿1,800)</option>
+                    <option value="ic_swapped" ${pa.display === 'ic_swapped' ? 'selected' : ''}>⚠️ สงสัยจอย้ายชิป IC / เซนเซอร์ ALS ผิดปกติ (-฿1,800)</option>
                     <option value="fake_display" ${pa.display === 'fake_display' ? 'selected' : ''}>✕ จอเทียบ / จอปลอม (Unknown Part / LCD แสงรั่ว -฿2,800)</option>
                   </select>
                 </div>
                 <div>
                   <label class="block text-[11px] font-bold text-slate-700 mb-1">2.4 True Tone / เมนบอร์ด / สแกนนิ้วใต้จอ</label>
-                  <select id="sel-part-board" onchange="updatePartsAuditFromUi()" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-2.5 py-2 font-semibold text-slate-900">
+                  <select id="sel-part-board" onchange="updatePartsAuditFromUi('board')" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-2.5 py-2 font-semibold text-slate-900">
+                    <option value="" ${!pa.board ? 'selected' : ''}>— กรุณาตรวจปุ่ม True Tone แล้วเลือก —</option>
                     <option value="genuine_orig" ${pa.board === 'genuine_orig' ? 'selected' : ''}>✓ ปกติ (มีปุ่ม True Tone / ไม่ขึ้น Unverified Board)</option>
                     <option value="no_truetone_or_unverified" ${pa.board === 'no_truetone_or_unverified' ? 'selected' : ''}>✕ ปุ่ม True Tone หาย / แจ้งเตือน Unverified Board (-฿1,500)</option>
                   </select>
                 </div>
                 <div>
                   <label class="block text-[11px] font-bold text-slate-700 mb-1">2.5 สถานะแบตเตอรี่ (Battery)</label>
-                  <select id="sel-part-battery" onchange="updatePartsAuditFromUi()" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-2.5 py-2 font-semibold text-slate-900">
+                  <select id="sel-part-battery" onchange="updatePartsAuditFromUi('battery')" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-2.5 py-2 font-semibold text-slate-900">
+                    <option value="" ${!pa.battery ? 'selected' : ''}>— กรุณาตรวจประวัติแบตเตอรี่แล้วเลือก —</option>
                     <option value="genuine_orig" ${pa.battery === 'genuine_orig' ? 'selected' : ''}>✓ แบตแท้เดิมโรงงาน</option>
                     <option value="genuine_replaced" ${pa.battery === 'genuine_replaced' ? 'selected' : ''}>● แบตแท้เปลี่ยนศูนย์ (Genuine Part)</option>
                     <option value="unknown_part" ${pa.battery === 'unknown_part' ? 'selected' : ''}>✕ แบตเทียบ / Unknown Part (-฿1,200)</option>
@@ -2851,7 +2933,8 @@
                 </div>
                 <div>
                   <label class="block text-[11px] font-bold text-slate-700 mb-1">2.6 สถานะกล้อง (Camera)</label>
-                  <select id="sel-part-camera" onchange="updatePartsAuditFromUi()" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-2.5 py-2 font-semibold text-slate-900">
+                  <select id="sel-part-camera" onchange="updatePartsAuditFromUi('camera')" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-2.5 py-2 font-semibold text-slate-900">
+                    <option value="" ${!pa.camera ? 'selected' : ''}>— กรุณาตรวจประวัติกล้องแล้วเลือก —</option>
                     <option value="genuine_orig" ${pa.camera === 'genuine_orig' ? 'selected' : ''}>✓ กล้องแท้เดิมโรงงาน</option>
                     <option value="genuine_replaced" ${pa.camera === 'genuine_replaced' ? 'selected' : ''}>● กล้องแท้เปลี่ยนศูนย์ (Genuine / Used)</option>
                     <option value="unknown_part" ${pa.camera === 'unknown_part' ? 'selected' : ''}>✕ กล้องเทียบ / Unknown Part (-฿1,500)</option>
@@ -2860,8 +2943,8 @@
               </div>
 
               <div class="pt-1 flex flex-wrap items-center justify-between gap-2">
-                <span id="parts-audit-summary-line" class="text-[11px] font-bold text-emerald-700">สรุป: จอแท้เดิมโรงงานครบทุกเกณฑ์</span>
-                <button type="button" onclick="confirmPartsAuthenticityStep()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm">
+                <span id="parts-audit-summary-line" class="text-[11px] font-bold text-slate-600">กรุณาตรวจจริงบนเครื่องและเลือกผลให้ครบทั้ง 6 ข้อ</span>
+                <button id="btn-confirm-parts-auth" type="button" onclick="confirmPartsAuthenticityStep()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm">
                   ยืนยันผลตรวจจอแท้ &amp; อะไหล่
                 </button>
               </div>
@@ -3272,68 +3355,6 @@
       if (count >= 3) {
         unlockCurrentStepPass('Haptic 3/3 OK');
         setTimeout(() => markCurrentTest('pass'), 280);
-      }
-    }
-
-    function startRealProximityCameraSensor() {
-      stopActiveMedia();
-      const badge = document.getElementById('prox-lux-badge');
-      const bar = document.getElementById('prox-light-bar');
-      const video = document.getElementById('prox-cam-video');
-      if (badge) badge.textContent = 'กำลังเปิดเซนเซอร์วัดแสงด้านบน...';
-
-      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 64, height: 64 } }).then(stream => {
-          state.activeStream = stream;
-          if (video) {
-            video.srcObject = stream;
-            video.play().catch(() => {});
-          }
-          const canvas = document.createElement('canvas');
-          canvas.width = 16;
-          canvas.height = 16;
-          const ctx = canvas.getContext('2d');
-          let baselineLuma = null;
-          let darkFrames = 0;
-
-          state.micInterval = setInterval(() => {
-            if (!video || video.readyState < 2) return;
-            try {
-              ctx.drawImage(video, 0, 0, 16, 16);
-              const data = ctx.getImageData(0, 0, 16, 16).data;
-              let sum = 0;
-              for (let i = 0; i < data.length; i += 4) {
-                sum += 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
-              }
-              const avgLuma = Math.round(sum / 256);
-              if (baselineLuma === null && avgLuma > 25) {
-                baselineLuma = avgLuma;
-              }
-              const pct = Math.min(100, Math.max(4, Math.round((avgLuma / 200) * 100)));
-              if (bar) bar.style.width = pct + '%';
-
-              const isCovered = (avgLuma <= 42) || (baselineLuma && avgLuma <= baselineLuma * 0.45);
-              if (isCovered) {
-                darkFrames++;
-                if (badge) badge.textContent = `✋ ตรวจพบการบังเซนเซอร์! (แสง ${avgLuma} · ยืนยัน ${darkFrames}/4)`;
-                if (bar) bar.className = 'bg-amber-500 h-full rounded-full transition-all duration-100';
-              } else {
-                if (badge) badge.textContent = `ความสว่างปัจจุบัน: ${avgLuma} (เอามือบังกล้องหน้าให้มืดลง)`;
-                if (bar) bar.className = 'bg-emerald-600 h-full rounded-full transition-all duration-100';
-              }
-
-              if (darkFrames >= 4) {
-                stopActiveMedia();
-                if (badge) badge.textContent = '✓ Proximity Sensor ตรวจพบการบังหน้าจอสำเร็จ!';
-                playLowFreqTapticPulse(1);
-                unlockCurrentStepPass('Proximity Verified');
-                setTimeout(() => markCurrentTest('pass'), 300);
-              }
-            } catch (e) {}
-          }, 140);
-        }).catch(() => {
-          if (badge) badge.textContent = 'เบราว์เซอร์บล็อกกล้อง — กรุณากดเปิดเซ็นเซอร์เอียงเครื่องด้านล่างแทน';
-        });
       }
     }
 
@@ -3930,7 +3951,7 @@
       `;
     }
 
-    function updatePartsAuditFromUi() {
+    function updatePartsAuditFromUi(changedField) {
       const d = document.getElementById('sel-part-display');
       const b = document.getElementById('sel-part-battery');
       const c = document.getElementById('sel-part-camera');
@@ -3945,11 +3966,26 @@
       if (ab) state.partsAudit.autoBrightness = ab.value;
       if (bz) state.partsAudit.bezelChin = bz.value;
 
-      // Auto-flag suspected IC-swap if Auto-Brightness/ALS fails OR thick chin bezel is detected while Display says "genuine_orig"
-      const suspectedIcSwap =
-        state.partsAudit.display === 'ic_swapped' ||
+      // Prevent contradiction: if 2.1 (Auto-Brightness/ALS) or 2.2 (Bezel) fails, never leave 2.3 Display on "genuine_orig"
+      const alsOrBezelFailed =
         state.partsAudit.autoBrightness === 'missing_or_no_react' ||
         state.partsAudit.bezelChin === 'thick_or_raised';
+      if (alsOrBezelFailed && (state.partsAudit.display === 'genuine_orig' || state.partsAudit.display === '')) {
+        state.partsAudit.display = 'ic_swapped';
+        if (d) d.value = 'ic_swapped';
+      }
+
+      const missingCount = [
+        state.partsAudit.autoBrightness,
+        state.partsAudit.bezelChin,
+        state.partsAudit.display,
+        state.partsAudit.board,
+        state.partsAudit.battery,
+        state.partsAudit.camera
+      ].filter(v => !v).length;
+
+      const suspectedIcSwap =
+        state.partsAudit.display === 'ic_swapped' || alsOrBezelFailed;
 
       const hasFakeOrUnknown =
         state.partsAudit.display === 'fake_display' ||
@@ -3958,13 +3994,18 @@
         state.partsAudit.camera === 'unknown_part' ||
         state.partsAudit.board === 'no_truetone_or_unverified';
 
-      state.cosmetics.parts = hasFakeOrUnknown ? 'non_genuine' : 'genuine';
-      const radioParts = document.querySelector(`input[name="cos_parts"][value="${state.cosmetics.parts}"]`);
-      if (radioParts) radioParts.checked = true;
+      if (missingCount === 0) {
+        state.cosmetics.parts = hasFakeOrUnknown ? 'non_genuine' : 'genuine';
+        const radioParts = document.querySelector(`input[name="cos_parts"][value="${state.cosmetics.parts}"]`);
+        if (radioParts) radioParts.checked = true;
+      }
 
       const sumEl = document.getElementById('parts-audit-summary-line');
       if (sumEl) {
-        if (state.partsAudit.display === 'fake_display') {
+        if (missingCount > 0) {
+          sumEl.className = 'text-[11px] font-bold text-slate-600';
+          sumEl.textContent = `ยังไม่ได้เลือก ${missingCount}/6 ข้อ — กรุณาตรวจจริงบนเครื่องให้ครบก่อนยืนยัน`;
+        } else if (state.partsAudit.display === 'fake_display') {
           sumEl.className = 'text-[11px] font-bold text-rose-700';
           sumEl.textContent = '✕ พบจอเทียบ/จอปลอม (หัก -฿2,800 · จำกัดสูงสุด Grade C)';
         } else if (suspectedIcSwap) {
@@ -3981,11 +4022,28 @@
           sumEl.textContent = '✓ จอแท้เดิมโรงงาน + เซนเซอร์ ALS/True Tone ปกติครบทุกจุด';
         }
       }
-      unlockCurrentStepPass(hasFakeOrUnknown ? 'บันทึกจุดสังเกตอะไหล่แล้ว' : 'จอแท้ & ALS ปกติ');
+
+      if (missingCount === 0) {
+        unlockCurrentStepPass(hasFakeOrUnknown ? 'บันทึกจุดสังเกตอะไหล่แล้ว' : 'จอแท้ & ALS ปกติ');
+      }
     }
 
     function confirmPartsAuthenticityStep() {
       updatePartsAuditFromUi();
+      const missingCount = [
+        state.partsAudit.autoBrightness,
+        state.partsAudit.bezelChin,
+        state.partsAudit.display,
+        state.partsAudit.board,
+        state.partsAudit.battery,
+        state.partsAudit.camera
+      ].filter(v => !v).length;
+
+      if (missingCount > 0) {
+        showToast(`กรุณาตรวจจริงบนเครื่องและเลือกผลให้ครบทั้ง 6 ข้อ (เหลืออีก ${missingCount} ข้อ)`);
+        return;
+      }
+
       const hasAnomaly =
         state.partsAudit.display === 'fake_display' ||
         state.partsAudit.display === 'ic_swapped' ||
@@ -4003,6 +4061,26 @@
     }
 
     // --- Cosmetics & Device Photos ---
+    function setBatteryInputMode(mode) {
+      state.cosmetics.batteryMode = mode;
+      const pPct = document.getElementById('bat-panel-percent');
+      const pStat = document.getElementById('bat-panel-status');
+      const bPct = document.getElementById('bat-mode-btn-pct');
+      const bStat = document.getElementById('bat-mode-btn-status');
+      if (mode === 'status') {
+        if (pPct) pPct.classList.add('hidden');
+        if (pStat) pStat.classList.remove('hidden');
+        if (bStat) bStat.className = 'py-1.5 px-2 rounded-xl bg-blue-600 font-bold';
+        if (bPct) bPct.className = 'py-1.5 px-2 rounded-xl bg-slate-100 text-slate-700 font-semibold border border-slate-200';
+      } else {
+        if (pPct) pPct.classList.remove('hidden');
+        if (pStat) pStat.classList.add('hidden');
+        if (bPct) bPct.className = 'py-1.5 px-2 rounded-xl bg-blue-600 font-bold';
+        if (bStat) bStat.className = 'py-1.5 px-2 rounded-xl bg-slate-100 text-slate-700 font-semibold border border-slate-200';
+      }
+      updateCosmetics();
+    }
+
     function updateCosmetics() {
       const s = document.querySelector('input[name="cos_screen"]:checked');
       const b = document.querySelector('input[name="cos_body"]:checked');
@@ -4010,19 +4088,32 @@
       const p = document.querySelector('input[name="cos_parts"]:checked');
       const w = document.querySelector('input[name="cos_water"]:checked');
       const bat = document.getElementById('input-battery-health');
+      const andBat = document.getElementById('select-android-bat-status');
+      const lbl = document.getElementById('battery-health-label');
+
       if (s) state.cosmetics.screen = s.value;
       if (b) state.cosmetics.body = b.value;
       if (l) state.cosmetics.lock = l.value;
       if (p) state.cosmetics.parts = p.value;
       if (w) state.cosmetics.water = w.value;
-      if (bat) {
+
+      if (state.cosmetics.batteryMode === 'status' && andBat) {
+        state.cosmetics.androidBatStatus = andBat.value;
+        if (andBat.value === 'normal' || andBat.value === 'na') {
+          state.cosmetics.batteryHealth = 88;
+          if (lbl) lbl.textContent = andBat.value === 'normal' ? 'ปกติ (Normal · Grade A)' : 'ไม่แสดง % (ปกติ)';
+        } else if (andBat.value === 'weak') {
+          state.cosmetics.batteryHealth = 75;
+          if (lbl) lbl.textContent = 'เริ่มเสื่อม (Weak · หักค่าแบต)';
+        } else {
+          state.cosmetics.batteryHealth = 60;
+          if (lbl) lbl.textContent = 'เสื่อมหนัก / บวม (Bad · Grade D)';
+        }
+      } else if (bat) {
         state.cosmetics.batteryHealth = parseInt(bat.value, 10) || 90;
-        const lbl = document.getElementById('battery-health-label');
         const bh = state.cosmetics.batteryHealth;
         const statusTxt = bh >= 90 ? 'Premium A+' : bh >= 85 ? 'Grade A' : bh >= 80 ? 'Grade B' : 'เสื่อม (<80%)';
         if (lbl) lbl.textContent = `${bh}% (${statusTxt})`;
-        const hVal = document.getElementById("home-bat-health-val");
-        if (hVal) hVal.textContent = `${bh}% (${statusTxt})`;
       }
       refreshSamplePhotos();
     }
@@ -5703,7 +5794,7 @@ function fetchAppleSupportModelsFromUrl(targetUrl) {
       const clean = (val || '').replace(/[^A-Za-z0-9]/g, '');
       if (!clean) {
         hint.className = 'mt-1 text-[10px] text-slate-500';
-        hint.textContent = 'เบราว์เซอร์ไม่สามารถดึง IMEI อัตโนมัติได้ (กรอกเลข 15 หลักเพื่อตรวจ Luhn หรือเสียบสาย USB ผ่านตัวช่วยด้านล่าง)';
+        hint.textContent = 'กด *#06# บนมือถือแล้วกรอกเลข 15 หลัก ระบบจะตรวจสอบความถูกต้องด้วยสูตร Luhn อัตโนมัติ';
         return;
       }
       if (/^\d{15}$/.test(clean)) {
@@ -5724,23 +5815,6 @@ function fetchAppleSupportModelsFromUrl(targetUrl) {
         hint.className = 'mt-1 text-[10px] text-slate-500';
         hint.textContent = `กำลังกรอก (${clean.length}/15 หลักสำหรับ IMEI หรือ 10–12 หลักสำหรับ Serial Number)`;
       }
-    }
-
-    async function runLiveBatteryProbe() {
-      const hBat = document.getElementById('home-bat-pct');
-      const hVal = document.getElementById('home-bat-health-val');
-      if (navigator.getBattery) {
-        try {
-          const b = await navigator.getBattery();
-          const pct = Math.round(b.level * 100);
-          if (hBat) hBat.textContent = `${pct}% (${b.charging ? 'กำลังชาร์จไฟเข้า' : 'ไม่ได้เสียบสาย'})`;
-          showToast(`อ่านสถานะแบตเตอรี่สดได้ ${pct}% (สำหรับ % สุขภาพแบตเชิงลึกและรอบชาร์จ ให้ใช้โหมด USB Bridge)`);
-          return;
-        } catch (e) {}
-      }
-      if (hBat) hBat.textContent = 'iOS Safari บล็อกการอ่านค่าแบตโดยตรง — ใช้โหมด USB Bridge เพื่อดึง % สุขภาพแบตและรอบชาร์จจริง';
-      if (hVal) hVal.textContent = `${state.cosmetics.batteryHealth}%`;
-      showToast('บน iPhone/iPad Safari ไม่อนุญาตให้อ่าน % สุขภาพแบตจากเว็บโดยตรง — กดปุ่ม "ดึงค่าเต็มแบบ 3uTools (USB)" เพื่อดูวิธีดึงผ่านสาย USB', '⚡');
     }
 
     function openUsbBridgeModal() {
@@ -5804,8 +5878,6 @@ function fetchAppleSupportModelsFromUrl(targetUrl) {
         if (d.batteryHealth) {
           const batRange = document.getElementById('input-battery-health');
           if (batRange) batRange.value = Math.min(100, Math.max(50, parseInt(d.batteryHealth, 10)));
-          const hVal = document.getElementById('home-bat-health-val');
-          if (hVal) hVal.textContent = `${d.batteryHealth}%${d.cycleCount ? ` (${d.cycleCount} รอบ)` : ''}`;
           updateCosmetics();
         }
         if (d.partsGenuine === false) {
@@ -5830,6 +5902,220 @@ function fetchAppleSupportModelsFromUrl(targetUrl) {
       document.body.removeChild(ta);
       showToast('คัดลอกโค้ด Code.gs ฉบับสมบูรณ์เรียบร้อย นำไปวางใน Google Apps Script ได้เลย!');
     }
+
+    // --- SmartCheck PC/Mac USB Diagnostic Station (3uTools-Style Local API Bridge) ---
+    const USB_STATION_BASE = (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost')
+      ? window.location.origin
+      : 'http://127.0.0.1:8765';
+
+    async function checkUsbStationHealth() {
+      const badge = document.getElementById('usb-station-status-badge');
+      if (!badge) return false;
+      try {
+        const ctrl = new AbortController();
+        const t = setTimeout(() => ctrl.abort(), 1600);
+        const res = await fetch(`${USB_STATION_BASE}/api/health`, { signal: ctrl.signal });
+        clearTimeout(t);
+        if (res.ok) {
+          const data = await res.json();
+          const toolsTxt = [];
+          if (data.tools && data.tools.pymobiledevice3) toolsTxt.push('iOS พร้อม');
+          if (data.tools && data.tools.adb) toolsTxt.push('Android พร้อม');
+          badge.className = 'px-2 py-0.5 rounded-full bg-[#D4E9D8] text-[#143A26] border border-[#8BC499] font-bold text-[10px]';
+          badge.textContent = '● เชื่อมต่อ USB Station แล้ว' + (toolsTxt.length ? ` (${toolsTxt.join(' · ')})` : '');
+          return true;
+        }
+      } catch (e) {}
+      badge.className = 'px-2 py-0.5 rounded-full bg-[#FFF0CA] text-[#4A2B0F] border border-[#E2B380] font-bold text-[10px]';
+      badge.textContent = 'ยังไม่เปิดโปรแกรม USB Station บนคอม';
+      return false;
+    }
+
+    async function scanViaUsbStation() {
+      const badge = document.getElementById('usb-station-status-badge');
+      if (badge) badge.textContent = 'กำลังอ่านข้อมูลผ่านสาย USB...';
+      try {
+        const res = await fetch(`${USB_STATION_BASE}/api/scan`);
+        const data = await res.json();
+        if (!data.ok) {
+          showToast(data.message || 'ไม่พบมือถือที่เสียบสาย USB');
+          if (badge) {
+            badge.className = 'px-2 py-0.5 rounded-full bg-[#F6CBD5] text-[#5C192D] border border-[#DC96AB] font-bold text-[10px]';
+            badge.textContent = 'ไม่พบเครื่องที่เสียบสาย USB';
+          }
+          return;
+        }
+        applyUsbStationPayload(data);
+        if (badge) {
+          badge.className = 'px-2 py-0.5 rounded-full bg-[#D4E9D8] text-[#143A26] border border-[#8BC499] font-bold text-[10px]';
+          badge.textContent = `● สแกนสำเร็จ (${data.driver || 'USB'})`;
+        }
+      } catch (err) {
+        showToast('ยังไม่ได้เปิดโปรแกรม Start_SmartCheck_USB บนคอม (กด "ตัวอย่าง iPhone / Samsung" เพื่อดูรูปแบบได้ครับ)');
+        if (badge) {
+          badge.className = 'px-2 py-0.5 rounded-full bg-[#FFF0CA] text-[#4A2B0F] border border-[#E2B380] font-bold text-[10px]';
+          badge.textContent = 'ยังไม่เปิดโปรแกรม USB Station บนคอม';
+        }
+      }
+    }
+
+    function runUsbStationDemo(kind) {
+      const sample = kind === 'samsung' ? {
+        ok: true, demo: true, platform: 'Android', driver: 'ADB (USB ตัวอย่าง)',
+        brand: 'Samsung', model: 'Galaxy S24 Ultra', modelNumber: 'SM-S928B/DS', regionLabel: 'Android 15',
+        ram: '12GB', storage: '512GB', color: 'Titanium Gray', serial: 'R5CX408ABCD', imei: '354918273645102',
+        osVersion: 'Android 15 (One UI 7)', activationState: 'Verified Boot (Green)',
+        batteryHealth: 94, cycleCount: 118, batteryDesignMah: 5000, batteryActualMah: 4700, batteryTempC: 31.2,
+        charging: true, knoxTripped: false,
+        sensors: { als: true, proximity: true, gyroscope: true, accelerometer: true, magnetometer: true },
+        verificationReport: [
+          { part: 'รุ่น / Android OS', liveValue: 'Galaxy S24 Ultra (SM-S928B) · Android 15', status: 'ok', note: 'ศูนย์ไทย / Dual SIM' },
+          { part: 'สุขภาพแบตจริง (Samsung ASOC)', liveValue: '94% · 118 รอบชาร์จ (4700/5000 mAh)', status: 'ok', note: 'อ่านจาก mSavedBatteryAsoc ผ่าน ADB' },
+          { part: 'เซนเซอร์แสง ALS & Proximity (Kernel)', liveValue: 'ALS: ✓ พบฮาร์ดแวร์ · Proximity: ✓ พบฮาร์ดแวร์', status: 'ok', note: 'dumpsys sensorservice ปกติ' },
+          { part: 'Bootloader / Samsung Knox', liveValue: 'Boot: green · Knox: ✓ ปกติ (0x0)', status: 'ok', note: 'ไม่เคย Root' }
+        ]
+      } : {
+        ok: true, demo: true, platform: 'iOS', driver: 'pymobiledevice3 (USB ตัวอย่าง)',
+        brand: 'Apple', model: 'iPhone 15 Pro Max', modelNumber: 'MU773TH/A', regionLabel: 'ศูนย์ไทย (TH/A)',
+        ram: '8GB', storage: '256GB', color: 'Natural Titanium', serial: 'G6TZN481Q6L9', imei: '353912104829104',
+        osVersion: 'iOS 18.3', activationState: 'Activated',
+        batteryHealth: 93, cycleCount: 142, batteryDesignMah: 4422, batteryActualMah: 4112, batteryTempC: 30.4,
+        charging: true, knoxTripped: null, sensors: {},
+        verificationReport: [
+          { part: 'รุ่น / รหัสโมเดล (Model & Region)', liveValue: 'iPhone 15 Pro Max (MU773TH/A)', status: 'ok', note: 'ศูนย์ไทย (TH/A)' },
+          { part: 'แบตเตอรี่ (GasGauge / Cycle Count)', liveValue: '93% · 142 รอบ (4112/4422 mAh)', status: 'ok', note: 'SN แบต: F8Y34120987KLMN' },
+          { part: 'เมนบอร์ด (Logic Board MLB)', liveValue: 'C0234150987MLB123', status: 'ok', note: 'อ่านตรงจากบอร์ดผ่าน USB' },
+          { part: 'Wi-Fi / Bluetooth / Baseband', liveValue: 'Wi-Fi ปกติ · IMEI 353912104829104', status: 'ok', note: 'Baseband ปกติ' },
+          { part: 'หน้าจอ / Touch / ALS (ข้อจำกัด Apple)', liveValue: 'ต้องยืนยัน Auto-Brightness & True Tone บนเครื่อง', status: 'info', note: 'iOS 15+ ซ่อน Serial จอจาก USB สาธารณะ' }
+        ]
+      };
+      applyUsbStationPayload(sample);
+    }
+
+    function applyUsbStationPayload(data) {
+      if (!data) return;
+      state.usbStationReport = data;
+
+      const brandSel = document.getElementById('select-brand');
+      if (brandSel && data.brand) {
+        const opt = Array.from(brandSel.options).find(o => o.value.toLowerCase() === String(data.brand).toLowerCase());
+        if (opt) {
+          brandSel.value = opt.value;
+          handleBrandChange();
+        }
+      }
+      const modelSel = document.getElementById('input-model');
+      if (modelSel && data.model) {
+        const target = String(data.model).toLowerCase();
+        const mOpt = Array.from(modelSel.options).find(o => o.value.toLowerCase() === target || o.text.toLowerCase().includes(target));
+        if (mOpt) {
+          modelSel.value = mOpt.value;
+          handleModelChange();
+        } else {
+          state.modelName = data.model;
+        }
+      }
+
+      const ramSel = document.getElementById('select-ram');
+      if (ramSel && data.ram && data.ram !== '-') {
+        const rOpt = Array.from(ramSel.options).find(o => o.value === data.ram);
+        if (rOpt) ramSel.value = rOpt.value;
+      }
+      const romSel = document.getElementById('input-storage');
+      if (romSel && data.storage && data.storage !== '-') {
+        const sOpt = Array.from(romSel.options).find(o => o.value === data.storage);
+        if (sOpt) romSel.value = sOpt.value;
+      }
+      const imeiInp = document.getElementById('input-imei');
+      if (imeiInp && (data.imei || data.serial)) {
+        imeiInp.value = data.imei || data.serial;
+        if (typeof handleImeiOrSnInput === 'function') handleImeiOrSnInput(imeiInp.value);
+      }
+      const colorInp = document.getElementById('input-device-color');
+      if (colorInp && data.color) {
+        colorInp.value = data.color;
+      }
+      updateDeviceSelection();
+
+      if (typeof data.batteryHealth === 'number' && data.batteryHealth >= 1 && data.batteryHealth <= 100) {
+        state.cosmetics.batteryHealth = data.batteryHealth;
+        if (typeof setBatteryInputMode === 'function') setBatteryInputMode('percent');
+        const slider = document.getElementById('input-battery-health');
+        if (slider) slider.value = Math.max(50, Math.min(100, data.batteryHealth));
+        const valLbl = document.getElementById('battery-health-label');
+        if (valLbl) {
+          valLbl.textContent = `${data.batteryHealth}%` + (data.cycleCount ? ` (${data.cycleCount} รอบ)` : '');
+        }
+        if (typeof updateCosmetics === 'function') updateCosmetics();
+      }
+
+      if (data.charging) state.results['charging'] = 'pass';
+      if (data.platform === 'Android' && data.sensors) {
+        if (data.sensors.gyroscope && data.sensors.accelerometer) state.results['gyro'] = 'pass';
+        if (data.sensors.proximity) state.results['proximity'] = 'pass';
+      }
+      if (typeof renderChecklist === 'function') renderChecklist();
+      if (typeof updateStatsBar === 'function') updateStatsBar();
+
+      const repBox = document.getElementById('usb-station-report');
+      const headEl = document.getElementById('usb-report-headline');
+      const drvEl = document.getElementById('usb-report-driver-tag');
+      const kpiEl = document.getElementById('usb-report-kpi-grid');
+      const rowsEl = document.getElementById('usb-report-rows');
+
+      if (repBox && headEl && kpiEl && rowsEl) {
+        repBox.classList.remove('hidden');
+        headEl.textContent = `${data.brand} ${data.model} ${data.modelNumber ? '(' + data.modelNumber + ')' : ''} — ${data.osVersion || ''}`;
+        if (drvEl) drvEl.textContent = data.demo ? `${data.driver} · โหมดตัวอย่าง` : `${data.driver} · อ่านตรงจากเครื่อง`;
+
+        const batTxt = data.batteryHealth != null
+          ? `${data.batteryHealth}%` + (data.cycleCount != null ? ` · ${data.cycleCount} รอบ` : '')
+          : 'ไม่ระบุ %';
+        kpiEl.innerHTML = `
+          <div class="p-2 rounded-lg bg-[#F9F7F4] border border-slate-200">
+            <div class="text-[10px] text-slate-500">ความจุ / โซน</div>
+            <div class="font-extrabold text-[#162944]">${data.storage || '-'} · ${data.regionLabel || '-'}</div>
+          </div>
+          <div class="p-2 rounded-lg bg-[#F9F7F4] border border-slate-200">
+            <div class="text-[10px] text-slate-500">สุขภาพแบตจริง</div>
+            <div class="font-extrabold ${data.batteryHealth && data.batteryHealth < 80 ? 'text-rose-700' : 'text-[#143A26]'}">${batTxt}</div>
+          </div>
+          <div class="p-2 rounded-lg bg-[#F9F7F4] border border-slate-200">
+            <div class="text-[10px] text-slate-500">Serial / IMEI</div>
+            <div class="font-mono font-bold text-[#162944] truncate">${data.imei || data.serial || '-'}</div>
+          </div>
+          <div class="p-2 rounded-lg bg-[#F9F7F4] border border-slate-200">
+            <div class="text-[10px] text-slate-500">สถานะระบบ</div>
+            <div class="font-bold text-[#162944]">${data.activationState || '-'}</div>
+          </div>
+        `;
+
+        const rows = Array.isArray(data.verificationReport) ? data.verificationReport : [];
+        rowsEl.innerHTML = rows.map(r => {
+          const pill = r.status === 'ok'
+            ? '<span class="px-1.5 py-0.5 rounded bg-[#D4E9D8] text-[#143A26] font-bold text-[10px]">ปกติ</span>'
+            : r.status === 'warn'
+              ? '<span class="px-1.5 py-0.5 rounded bg-[#F6CBD5] text-[#5C192D] font-bold text-[10px]">ผิดปกติ</span>'
+              : '<span class="px-1.5 py-0.5 rounded bg-[#FFF0CA] text-[#4A2B0F] font-bold text-[10px]">ตรวจเพิ่ม</span>';
+          return `
+            <div class="py-1.5 flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <div class="font-bold text-[#1E2433]">${r.part}</div>
+                <div class="text-[10px] text-slate-500">${r.note || ''}</div>
+              </div>
+              <div class="flex items-center gap-2 text-right">
+                <span class="font-mono font-semibold text-[#162944]">${r.liveValue}</span>
+                ${pill}
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      showToast(`ดึงข้อมูล ${data.brand} ${data.model} ผ่าน USB สำเร็จแล้ว!`);
+    }
+
+    setTimeout(checkUsbStationHealth, 600);
 
     window.onload = async function() {
       loadSavedCatalogFromStorage();
