@@ -2487,7 +2487,9 @@
       const item = DIAGNOSTIC_ITEMS[state.currentStepIndex];
       state.results[item.id] = status;
       updateStatsBar();
-      showToast(`${item.name}: บันทึกผล "${status === 'pass' ? 'ปกติ' : 'พบปัญหา'}"`, status === 'pass' ? '✓' : '✕');
+      const lbl = status === 'pass' ? 'ปกติ' : status === 'skip' ? 'ข้าม (ไม่บังคับ)' : 'พบปัญหา';
+      const ico = status === 'pass' ? '✓' : status === 'skip' ? '—' : '✕';
+      showToast(`${item.name}: บันทึกผล "${lbl}"`, ico);
       nextTestStep();
     }
 
@@ -2507,7 +2509,7 @@
       if (titleEl) titleEl.innerHTML = `<span class="inline-flex items-center gap-2"><span class="w-7 h-7 rounded-lg bg-blue-50 text-blue-700 inline-flex items-center justify-center">${item.icon}</span><span>${item.name} (${item.en})</span></span>`;
       if (subEl) subEl.textContent = item.desc;
       if (curStEl) {
-        curStEl.textContent = st === 'pass' ? '✓ ปกติ' : st === 'fail' ? '✕ พบปัญหา' : 'รอการยืนยันจากฮาร์ดแวร์จริง';
+        curStEl.textContent = st === 'pass' ? '✓ ปกติ' : st === 'fail' ? '✕ พบปัญหา' : st === 'skip' ? '— ข้าม (ไม่มีซิม / ไม่บังคับ)' : 'รอการยืนยันจากฮาร์ดแวร์จริง';
       }
 
       if (passBtn) {
@@ -2737,8 +2739,8 @@
                 <b>หมายเหตุความแม่นยำ:</b> เว็บเบราว์เซอร์ไม่สามารถสั่งอ่านเซนเซอร์อินฟราเรด Proximity โดยตรงได้ (การเอามือบังกล้องหน้าวัดได้แค่แสงกล้อง ไม่ใช่เซนเซอร์แนบหู) ให้ทดสอบจริงดังนี้:
               </p>
               <ul class="list-disc list-inside text-[11px] text-slate-700 space-y-1">
-                <li><b>iPhone:</b> โทรออกหรือกดเล่นเสียงในแอป <i>เสียงบันทึก (Voice Memos)</i> แล้วนำมือบังบริเวณลำโพงบน — <b>หน้าจอต้องดับมืดเองทันที</b></li>
-                <li><b>Samsung / Android:</b> กด <code>*#0*#</code> &gt; แตะ <b>Sensor</b> &gt; นำมือบังด้านบนจอ — <b>จอต้องเปลี่ยนเป็นสีเขียวและสั่น</b></li>
+                <li><b>iPhone (เครื่องไม่มีซิม — ใช้ Wi-Fi):</b> โทร <b>FaceTime Audio</b> หรือ <b>LINE Call</b> (แบบไม่เปิดลำโพง) หรือเปิดฟังข้อความเสียงใน LINE/WhatsApp แล้วนำมือบังเหนือลำโพงบน — <b>หน้าจอต้องดับมืดเองทันที</b> <i>(แอป Voice Memos บน iOS 13+ ไม่รองรับการดับจอแล้ว)</i></li>
+                <li><b>Samsung / Android (ไม่ต้องใช้ซิม):</b> กด <code>*#0*#</code> &gt; แตะ <b>Sensor</b> &gt; นำมือบังด้านบนจอ — <b>จอต้องเปลี่ยนเป็นสีเขียวและสั่น</b></li>
               </ul>
               <div class="grid grid-cols-2 gap-2 pt-1">
                 <button type="button" onclick="triggerProximitySensorPass()" class="py-2.5 px-3 rounded-xl bg-emerald-600 font-bold text-xs shadow-sm">
@@ -2748,6 +2750,9 @@
                   ✕ จอไม่ดับ (Proximity เสีย)
                 </button>
               </div>
+              <button type="button" onclick="markCurrentTest('skip')" class="w-full py-2 px-3 rounded-xl bg-white hover:bg-slate-50 text-[#334155] border border-slate-300 font-bold text-[11px]">
+                — ข้ามหัวข้อนี้ (เครื่องเปล่าไม่มีซิม / ไม่สะดวกโทร Wi-Fi · ไม่หักเกรด)
+              </button>
             </div>
 
             <!-- 2. Real Gyroscope / Accelerometer Motion Sensor -->
