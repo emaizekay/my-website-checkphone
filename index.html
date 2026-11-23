@@ -4,7 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" id="themeColorMeta" content="#f8fafc" />
   <title>SmartCheck iPhone Web Diagnostics</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
@@ -54,15 +55,16 @@
         </button>
       </div>
     </div>
-    <!-- Progress bar -->
-    <div id="progressWrap" class="hidden max-w-lg mx-auto px-4 pb-2">
-      <div class="flex items-center justify-between text-[11px] font-medium text-slate-500 mb-1">
+    <!-- Remobie-style Step Jumper + Progress bar -->
+    <div id="progressWrap" class="hidden max-w-lg mx-auto px-3 pb-2.5">
+      <div class="flex items-center justify-between text-[11px] font-medium text-slate-500 mb-1.5 px-1">
         <span id="stepLabel">Step 1 / 7</span>
         <span id="progressPct">14%</span>
       </div>
-      <div class="h-1.5 bg-slate-200 rounded-full overflow-hidden">
+      <div class="h-1.5 bg-slate-200 rounded-full overflow-hidden mb-2">
         <div id="progressBar" class="h-full bg-blue-600 rounded-full transition-all duration-300" style="width: 14%"></div>
       </div>
+      <div id="stepPills" class="flex items-center gap-1 overflow-x-auto no-scrollbar"></div>
     </div>
   </header>
 
@@ -207,8 +209,15 @@
       },
       manualImeiOrSerial: '',
       notes: '',
+      shareUrl: '',
+      editingShareUrl: false,
       cameraStream: null,
       cameraFacing: 'environment',
+      cameraDevices: [],
+      activeDeviceId: null,
+      activeLensLabel: '',
+      zoomCaps: null,
+      currentZoom: 1,
       micPeakDb: null,
       micActive: false,
       gyroSample: null,
@@ -220,6 +229,8 @@
     try {
       const savedUrl = localStorage.getItem('smartcheck_webhook_url');
       if (savedUrl) state.webhookUrl = savedUrl;
+      const savedShare = localStorage.getItem('smartcheck_share_url');
+      if (savedShare) state.shareUrl = savedShare;
     } catch (_) {}
 
     function detectDeviceInfo() {
@@ -394,19 +405,57 @@
       }
     }
 
+    const STEP_META = [
+      { id: 'display', th: '1.จอ', en: '1.Screen' },
+      { id: 'touch', th: '2.ทัช', en: '2.Touch' },
+      { id: 'audio', th: '3.เสียง', en: '3.Audio' },
+      { id: 'camera', th: '4.กล้อง', en: '4.Cam' },
+      { id: 'sensors', th: '5.ระบบ', en: '5.Sys' },
+      { id: 'cosmetic', th: '6.สภาพ', en: '6.Grade' },
+      { id: 'result', th: '7.ผล', en: '7.Result' },
+    ];
+
+    function setSafariChromeColor(hexColor) {
+      document.documentElement.style.backgroundColor = hexColor;
+      document.body.style.backgroundColor = hexColor;
+      let meta = document.getElementById('themeColorMeta') || document.querySelector('meta[name="theme-color"]');
+      if (!meta) {
+        meta = document.createElement('meta');
+        meta.name = 'theme-color';
+        meta.id = 'themeColorMeta';
+        document.head.appendChild(meta);
+      }
+      meta.setAttribute('content', hexColor);
+    }
+
     function updateProgress() {
-      const order = ['display', 'touch', 'audio', 'camera', 'sensors', 'cosmetic', 'result'];
       const wrap = document.getElementById('progressWrap');
-      const idx = order.indexOf(state.step);
+      const idx = STEP_META.findIndex((s) => s.id === state.step);
       if (idx === -1) {
         wrap.classList.add('hidden');
         return;
       }
       wrap.classList.remove('hidden');
-      const pct = Math.round(((idx + 1) / order.length) * 100);
-      document.getElementById('stepLabel').textContent = `Step ${idx + 1} / ${order.length}`;
+      const pct = Math.round(((idx + 1) / STEP_META.length) * 100);
+      document.getElementById('stepLabel').textContent = `Step ${idx + 1} / ${STEP_META.length}`;
       document.getElementById('progressPct').textContent = `${pct}%`;
       document.getElementById('progressBar').style.width = `${pct}%`;
+
+      const pillsEl = document.getElementById('stepPills');
+      if (pillsEl) {
+        pillsEl.innerHTML = STEP_META.map((s) => {
+          const active = s.id === state.step;
+          return `<button data-jump-step="${s.id}" type="button" class="px-2 py-1 rounded-lg text-[11px] font-bold shrink-0 transition ${active ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">${state.lang === 'th' ? s.th : s.en}</button>`;
+        }).join('');
+        pillsEl.querySelectorAll('[data-jump-step]').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            if (btn.dataset.jumpStep === 'result' && !state.qrString) return;
+            stopCameraStream();
+            state.step = btn.dataset.jumpStep;
+            render();
+          });
+        });
+      }
     }
 
     function statusBadge(status) {
@@ -441,7 +490,18 @@
       if (state.step === 'result') return renderResult(main);
     }
 
+    function getLaunchQrUrl() {
+      if (state.shareUrl && state.shareUrl.trim().startsWith('http')) {
+        return state.shareUrl.trim();
+      }
+      if (window.location && window.location.protocol === 'https:' && !/unused\.url/i.test(window.location.hostname)) {
+        return window.location.origin + window.location.pathname;
+      }
+      return 'https://emaizekay.github.io/smartcheck-web/';
+    }
+
     function renderHome(main) {
+      const launchUrl = getLaunchQrUrl();
       main.innerHTML = `
         <div class="space-y-4">
           <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-3">
@@ -451,6 +511,34 @@
               <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">${t('badge24')}</span>
               <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">${t('badgeZeroSim')}</span>
               <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-violet-50 text-violet-700 border border-violet-200">${t('badgeHybrid')}</span>
+            </div>
+          </div>
+
+          <button id="startInspectionBtn" type="button" class="w-full py-4 rounded-2xl bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white font-bold text-base shadow-md shadow-blue-600/20 transition">
+            ${t('startBtn')} →
+          </button>
+
+          <!-- Scan-to-Open QR Card for Test Devices -->
+          <div class="bg-white rounded-2xl border border-slate-200 p-5 space-y-3">
+            <div class="flex items-center justify-between gap-2">
+              <div>
+                <div class="text-sm font-bold text-slate-900">QR เปิดหน้านี้บนเครื่องที่จะทดสอบ</div>
+                <div class="text-xs text-slate-500">ใช้กล้อง iPhone เครื่องที่รับเข้าสแกนเพื่อเปิดหน้าตรวจเช็กทันที</div>
+              </div>
+              <button id="toggleEditShareUrlBtn" type="button" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-[11px] font-semibold text-slate-700 shrink-0">
+                ${state.editingShareUrl ? 'ปิด' : 'แก้ลิงก์'}
+              </button>
+            </div>
+            ${state.editingShareUrl ? `
+              <div class="flex gap-2">
+                <input id="shareUrlInput" type="url" value="${escapeHtml(launchUrl)}" placeholder="https://emaizekay.github.io/smartcheck-web/" class="flex-1 px-3 py-2 rounded-xl border border-slate-300 text-xs" />
+                <button id="saveShareUrlBtn" type="button" class="px-3 py-2 rounded-xl bg-blue-600 text-white text-xs font-bold">บันทึก</button>
+              </div>
+            ` : ''}
+            <div class="flex flex-col items-center pt-1 space-y-2">
+              <div id="homeQrWrap" class="p-2.5 bg-white rounded-xl border border-slate-200"></div>
+              <div class="text-[11px] text-slate-500 text-center break-all">${escapeHtml(launchUrl)}</div>
+              <button id="copyLaunchUrlBtn" type="button" class="px-3.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs font-semibold text-slate-700">คัดลอกลิงก์หน้าตรวจเช็ก</button>
             </div>
           </div>
 
@@ -475,17 +563,45 @@
               </div>
             </div>
           </div>
-
-          <button id="startInspectionBtn" type="button" class="w-full py-4 rounded-2xl bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white font-bold text-base shadow-md shadow-blue-600/20 transition">
-            ${t('startBtn')} →
-          </button>
         </div>
       `;
+
+      const qrWrap = document.getElementById('homeQrWrap');
+      if (typeof window.qrcode === 'function' && qrWrap) {
+        const qr = window.qrcode(0, 'M');
+        qr.addData(launchUrl);
+        qr.make();
+        qrWrap.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 2 });
+        const svg = qrWrap.querySelector('svg');
+        if (svg) {
+          svg.style.width = '168px';
+          svg.style.height = '168px';
+        }
+      } else if (qrWrap) {
+        qrWrap.innerHTML = '<div class="w-[168px] h-[168px] flex items-center justify-center text-center text-[11px] text-slate-400 p-3">QR พร้อมแสดงเมื่อเปิดผ่านอินเทอร์เน็ต</div>';
+      }
+
       document.getElementById('startInspectionBtn').addEventListener('click', () => {
         resetSession();
         state.step = 'display';
         render();
       });
+      document.getElementById('toggleEditShareUrlBtn').addEventListener('click', () => {
+        state.editingShareUrl = !state.editingShareUrl;
+        render();
+      });
+      const saveShareBtn = document.getElementById('saveShareUrlBtn');
+      if (saveShareBtn) {
+        saveShareBtn.addEventListener('click', () => {
+          const val = document.getElementById('shareUrlInput').value.trim();
+          state.shareUrl = val;
+          state.editingShareUrl = false;
+          try { localStorage.setItem('smartcheck_share_url', val); } catch (_) {}
+          showToast(t('savedToast'));
+          render();
+        });
+      }
+      document.getElementById('copyLaunchUrlBtn').addEventListener('click', () => copyText(launchUrl));
     }
 
     function renderDisplay(main) {
@@ -498,48 +614,75 @@
               ${statusBadge(cur)}
             </div>
             <p class="text-sm text-slate-600">${t('displayDesc')}</p>
-            <button id="launchDisplayBtn" type="button" class="w-full py-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-sm">
+            <button id="launchDisplayBtn" type="button" class="w-full py-4 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm shadow">
               ${t('openDisplayBtn')}
             </button>
-            <div class="grid grid-cols-2 gap-2 pt-2">
-              <button id="dispFailBtn" type="button" class="py-3 rounded-xl border border-rose-300 bg-rose-50 text-rose-700 font-bold text-sm">${t('fail')}</button>
-              <button id="dispPassBtn" type="button" class="py-3 rounded-xl bg-emerald-600 text-white font-bold text-sm">${t('pass')}</button>
+            <div class="grid grid-cols-2 gap-2 pt-1">
+              <button id="dispFailBtn" type="button" class="py-3.5 rounded-xl border border-rose-300 bg-rose-50 text-rose-700 font-bold text-sm">${t('fail')}</button>
+              <button id="dispPassBtn" type="button" class="py-3.5 rounded-xl bg-emerald-600 text-white font-bold text-sm">${t('pass')} →</button>
             </div>
           </div>
           ${navFooter('home', 'touch', !cur)}
         </div>
       `;
       document.getElementById('launchDisplayBtn').addEventListener('click', launchDisplayCycle);
-      document.getElementById('dispPassBtn').addEventListener('click', () => { setResult('display_uniformity', 'pass', 'uniform_6_colors'); render(); });
-      document.getElementById('dispFailBtn').addEventListener('click', () => { setResult('display_uniformity', 'fail', 'dead_pixel_or_burn_in'); render(); });
+      document.getElementById('dispPassBtn').addEventListener('click', () => {
+        setResult('display_uniformity', 'pass', 'uniform_6_colors');
+        state.step = 'touch';
+        render();
+      });
+      document.getElementById('dispFailBtn').addEventListener('click', () => {
+        setResult('display_uniformity', 'fail', 'dead_pixel_or_burn_in');
+        state.step = 'touch';
+        render();
+      });
       bindNavFooter('home', 'touch');
     }
 
     function launchDisplayCycle() {
       const colors = [
-        { bg: '#FFFFFF', fg: '#334155', name: 'White (1/6)' },
-        { bg: '#000000', fg: '#CBD5E1', name: 'Black (2/6)' },
-        { bg: '#FF0000', fg: '#FFFFFF', name: 'Red (3/6)' },
-        { bg: '#00FF00', fg: '#0F172A', name: 'Green (4/6)' },
-        { bg: '#0000FF', fg: '#FFFFFF', name: 'Blue (5/6)' },
-        { bg: '#808080', fg: '#FFFFFF', name: 'Gray 50% (6/6)' },
+        { bg: '#FFFFFF', label: 'ขาว (1/6)' },
+        { bg: '#000000', label: 'ดำ OLED (2/6)' },
+        { bg: '#FF0000', label: 'แดง Red (3/6)' },
+        { bg: '#00FF00', label: 'เขียว Green (4/6)' },
+        { bg: '#0000FF', label: 'น้ำเงิน Blue (5/6)' },
+        { bg: '#808080', label: 'เทา 50% Gray (6/6)' },
       ];
       let idx = 0;
       const ov = document.getElementById('fullscreenOverlay');
+      const header = document.getElementById('appHeader');
+      const mainEl = document.getElementById('appMain');
+
+      // Hide underlying chrome so iOS Safari Liquid Glass / status bars tint purely to test color
+      header.classList.add('hidden');
+      mainEl.classList.add('hidden');
       ov.classList.remove('hidden');
+      ov.style.height = '100dvh';
+      ov.style.width = '100vw';
+
+      function exitDisplayOverlay() {
+        setSafariChromeColor('#f8fafc');
+        ov.classList.add('hidden');
+        ov.innerHTML = '';
+        header.classList.remove('hidden');
+        mainEl.classList.remove('hidden');
+      }
 
       function draw() {
         if (idx >= colors.length) {
-          ov.classList.add('hidden');
-          ov.innerHTML = '';
+          exitDisplayOverlay();
           return;
         }
         const c = colors[idx];
+        // Update theme-color meta + html/body + top/bottom fixed edge probes for iOS Safari 15–26
+        setSafariChromeColor(c.bg);
         ov.style.backgroundColor = c.bg;
         ov.innerHTML = `
-          <div id="colorTapTarget" class="w-full h-full flex flex-col items-center justify-end pb-14 cursor-pointer">
-            <div class="px-4 py-2 rounded-full bg-black/25 text-white text-xs font-semibold backdrop-blur-xs">
-              แตะหน้าจอเพื่อเปลี่ยนสี • ${c.name}
+          <div style="position:fixed;top:0;left:0;width:100%;height:8px;background:${c.bg};pointer-events:none;"></div>
+          <div style="position:fixed;bottom:0;left:0;width:100%;height:8px;background:${c.bg};pointer-events:none;"></div>
+          <div id="colorTapTarget" class="w-full h-full flex flex-col items-center justify-end cursor-pointer" style="padding-bottom: max(2.5rem, env(safe-area-inset-bottom));">
+            <div class="px-4 py-2 rounded-full bg-black/30 text-white text-xs font-semibold backdrop-blur-xs">
+              แตะที่ใดก็ได้เพื่อเปลี่ยนสี • ${c.label}
             </div>
           </div>
         `;
@@ -557,42 +700,68 @@
         <div class="space-y-4">
           <div class="bg-white rounded-2xl border border-slate-200 p-5 space-y-3">
             <div class="flex items-center justify-between gap-2">
-              <h2 class="text-base font-bold text-slate-900">${t('touchTitle')}</h2>
+              <h2 class="text-base font-bold text-slate-900">ขั้นที่ 2: ทดสอบทัชสกรีนเต็มพื้นที่ (28 ช่องไว)</h2>
               ${statusBadge(cur)}
             </div>
-            <p class="text-sm text-slate-600">${t('touchDesc')}</p>
-            <button id="launchTouchBtn" type="button" class="w-full py-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-sm">
+            <p class="text-sm text-slate-600">ลากนิ้วปาดให้ครบ 28 ช่อง (เมื่อครบจะข้ามไปขั้นถัดไปให้อัตโนมัติแบบ Remobie Check) หากมีจุดทัชไม่ติดกดปุ่ม "ทัชไม่ติด (FAIL)" ด้านบนได้ตลอดเวลา</p>
+            <button id="launchTouchBtn" type="button" class="w-full py-4 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm shadow">
               ${t('openTouchBtn')}
             </button>
-            <div class="grid grid-cols-2 gap-2 pt-2">
-              <button id="touchFailBtn" type="button" class="py-3 rounded-xl border border-rose-300 bg-rose-50 text-rose-700 font-bold text-sm">${t('fail')}</button>
-              <button id="touchPassBtn" type="button" class="py-3 rounded-xl bg-emerald-600 text-white font-bold text-sm">${t('pass')}</button>
+            <div class="grid grid-cols-2 gap-2 pt-1">
+              <button id="touchFailBtn" type="button" class="py-3.5 rounded-xl border border-rose-300 bg-rose-50 text-rose-700 font-bold text-sm">${t('fail')}</button>
+              <button id="touchPassBtn" type="button" class="py-3.5 rounded-xl bg-emerald-600 text-white font-bold text-sm">${t('pass')} →</button>
             </div>
           </div>
           ${navFooter('display', 'audio', !cur)}
         </div>
       `;
       document.getElementById('launchTouchBtn').addEventListener('click', launchTouchGrid);
-      document.getElementById('touchPassBtn').addEventListener('click', () => { setResult('touch_grid', 'pass', 'manual_pass'); render(); });
-      document.getElementById('touchFailBtn').addEventListener('click', () => { setResult('touch_grid', 'fail', 'dead_touch_zone'); render(); });
+      document.getElementById('touchPassBtn').addEventListener('click', () => {
+        setResult('touch_grid', 'pass', 'manual_pass');
+        state.step = 'audio';
+        render();
+      });
+      document.getElementById('touchFailBtn').addEventListener('click', () => {
+        setResult('touch_grid', 'fail', 'dead_touch_zone');
+        state.step = 'audio';
+        render();
+      });
       bindNavFooter('display', 'audio');
     }
 
     function launchTouchGrid() {
-      const cols = 5, rows = 9, total = cols * rows;
+      const cols = 4, rows = 7, total = cols * rows;
       const touched = new Set();
       const ov = document.getElementById('fullscreenOverlay');
+      const header = document.getElementById('appHeader');
+      const mainEl = document.getElementById('appMain');
+
+      header.classList.add('hidden');
+      mainEl.classList.add('hidden');
+      setSafariChromeColor('#ffffff');
       ov.style.backgroundColor = '#ffffff';
+      ov.style.height = '100dvh';
+      ov.style.width = '100vw';
       ov.classList.remove('hidden');
+
+      function closeTouch(nextStep) {
+        setSafariChromeColor('#f8fafc');
+        ov.classList.add('hidden');
+        ov.innerHTML = '';
+        header.classList.remove('hidden');
+        mainEl.classList.remove('hidden');
+        if (nextStep) state.step = nextStep;
+        render();
+      }
 
       let cellsHtml = '';
       for (let i = 0; i < total; i++) {
         cellsHtml += `<div data-cell="${i}" class="touch-grid-cell bg-slate-100 border border-white"></div>`;
       }
       ov.innerHTML = `
-        <div id="touchBoard" class="w-full h-full grid grid-cols-5 grid-rows-9 touch-none relative">
+        <div id="touchBoard" class="w-full h-full grid grid-cols-4 grid-rows-7 touch-none relative">
           ${cellsHtml}
-          <div class="fixed top-3 left-3 right-3 flex items-center justify-between pointer-events-none z-10">
+          <div class="fixed left-3 right-3 flex items-center justify-between pointer-events-none z-10" style="top: max(0.75rem, env(safe-area-inset-top));">
             <span id="touchCounter" class="px-3 py-1.5 rounded-full bg-white/95 shadow text-xs font-bold text-slate-800">0 / ${total}</span>
             <button id="touchEscapeFail" type="button" class="pointer-events-auto px-3.5 py-1.5 rounded-full bg-rose-600 text-white shadow text-xs font-bold">
               ทัชไม่ติด (FAIL)
@@ -615,9 +784,7 @@
             counter.textContent = `${touched.size} / ${total}`;
             if (touched.size >= total) {
               setResult('touch_grid', 'pass', `all_${total}_cells_touched`);
-              ov.classList.add('hidden');
-              ov.innerHTML = '';
-              render();
+              setTimeout(() => closeTouch('audio'), 180);
             }
           }
         }
@@ -634,9 +801,7 @@
       });
       document.getElementById('touchEscapeFail').addEventListener('click', () => {
         setResult('touch_grid', 'fail', `touched_${touched.size}_of_${total}`);
-        ov.classList.add('hidden');
-        ov.innerHTML = '';
-        render();
+        closeTouch('audio');
       });
     }
 
@@ -754,9 +919,39 @@
       bindNavFooter('touch', 'camera');
     }
 
-    async function startCamera(facing) {
+    async function refreshCameraDeviceList() {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) return;
+      try {
+        const all = await navigator.mediaDevices.enumerateDevices();
+        state.cameraDevices = all
+          .filter((d) => d.kind === 'videoinput')
+          .map((d, idx) => ({
+            deviceId: d.deviceId,
+            label: d.label || `Camera Lens #${idx + 1}`,
+          }));
+      } catch (_) {}
+    }
+
+    async function applyCameraZoom(zoomVal) {
+      if (!state.cameraStream) return;
+      const track = state.cameraStream.getVideoTracks()[0];
+      if (!track || !track.applyConstraints) return;
+      try {
+        await track.applyConstraints({ advanced: [{ zoom: zoomVal }] });
+        state.currentZoom = zoomVal;
+        renderCameraControlsOnly();
+      } catch (_) {
+        showToast('เลนส์นี้ไม่รองรับการปรับ Zoom ผ่านเว็บ');
+      }
+    }
+
+    async function startCamera(options = {}) {
       stopCameraStream();
+      const { facing = 'environment', deviceId = null } = options;
       state.cameraFacing = facing;
+      state.zoomCaps = null;
+      state.currentZoom = 1;
+
       const video = document.getElementById('camVideo');
       const hint = document.getElementById('camHint');
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -764,18 +959,87 @@
         return;
       }
       try {
+        const videoConstraint = deviceId
+          ? { deviceId: { exact: deviceId } }
+          : { facingMode: { ideal: facing } };
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: { ideal: facing } },
+          video: videoConstraint,
           audio: false,
         });
         state.cameraStream = stream;
+        const track = stream.getVideoTracks()[0];
+        const settings = track && track.getSettings ? track.getSettings() : {};
+        state.activeDeviceId = settings.deviceId || deviceId || null;
+        state.activeLensLabel = (track && track.label) || (facing === 'user' ? 'กล้องหน้า (Front)' : 'กล้องหลัง (Rear)');
+
+        if (track && track.getCapabilities) {
+          const caps = track.getCapabilities();
+          if (caps && caps.zoom && typeof caps.zoom.min === 'number' && typeof caps.zoom.max === 'number') {
+            state.zoomCaps = { min: caps.zoom.min, max: caps.zoom.max };
+            state.currentZoom = settings.zoom || caps.zoom.min;
+          }
+        }
+
+        await refreshCameraDeviceList();
+
         if (video) {
           video.srcObject = stream;
           video.play().catch(() => {});
         }
-        if (hint) hint.textContent = facing === 'user' ? 'กล้องหน้า (Front)' : 'กล้องหลัง (Rear)';
+        if (hint) {
+          const resText = settings.width && settings.height ? ` • ${settings.width}x${settings.height}` : '';
+          hint.textContent = `${state.activeLensLabel}${resText}`;
+        }
+        renderCameraControlsOnly();
       } catch (e) {
         if (hint) hint.textContent = 'ไม่สามารถเปิดกล้องได้ (ตรวจสอบสิทธิ์ Safari Camera)';
+      }
+    }
+
+    function renderCameraControlsOnly() {
+      const lensBox = document.getElementById('lensListBox');
+      if (lensBox) {
+        if (state.cameraDevices.length === 0) {
+          lensBox.innerHTML = `<div class="text-[11px] text-slate-500">กด "เปิดกล้องหลัง" เพื่ออนุญาตสิทธิ์และแสดงรายชื่อเลนส์ทั้งหมดในเครื่อง (iOS 16.3+ แสดงครบ Ultra Wide / Wide / Telephoto)</div>`;
+        } else {
+          lensBox.innerHTML = `
+            <div class="text-[11px] font-bold text-slate-600 mb-1.5">เลนส์ที่ตรวจพบในเครื่อง (${state.cameraDevices.length} เลนส์) — แตะเพื่อสลับทดสอบทีละตัว:</div>
+            <div class="flex flex-wrap gap-1.5">
+              ${state.cameraDevices.map((d) => {
+                const active = state.activeDeviceId === d.deviceId;
+                return `<button data-lens-id="${escapeHtml(d.deviceId)}" type="button" class="px-2.5 py-1.5 rounded-lg text-[11px] font-bold border transition ${active ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'}">${escapeHtml(d.label)}</button>`;
+              }).join('')}
+            </div>
+          `;
+          lensBox.querySelectorAll('[data-lens-id]').forEach((btn) => {
+            btn.addEventListener('click', () => startCamera({ deviceId: btn.dataset.lensId }));
+          });
+        }
+      }
+
+      const zoomBox = document.getElementById('zoomControlsBox');
+      if (zoomBox) {
+        if (state.zoomCaps) {
+          const presets = [0.5, 1, 2, 3, 5].filter((z) => z >= state.zoomCaps.min - 0.05 && z <= state.zoomCaps.max + 0.05);
+          if (presets.length > 1) {
+            zoomBox.innerHTML = `
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <span class="text-[11px] font-semibold text-slate-500">Optical Zoom:</span>
+                ${presets.map((z) => {
+                  const active = Math.abs(state.currentZoom - z) < 0.2;
+                  return `<button data-zoom-val="${z}" type="button" class="px-2.5 py-1 rounded-lg text-[11px] font-bold ${active ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700'}">${z}x</button>`;
+                }).join('')}
+              </div>
+            `;
+            zoomBox.querySelectorAll('[data-zoom-val]').forEach((btn) => {
+              btn.addEventListener('click', () => applyCameraZoom(Number(btn.dataset.zoomVal)));
+            });
+          } else {
+            zoomBox.innerHTML = '';
+          }
+        } else {
+          zoomBox.innerHTML = '';
+        }
       }
     }
 
@@ -793,26 +1057,39 @@
 
             <div class="relative aspect-[4/3] bg-slate-900 rounded-xl overflow-hidden flex items-center justify-center">
               <video id="camVideo" autoplay playsinline muted class="w-full h-full object-cover"></video>
-              <div id="camHint" class="absolute bottom-2 left-2 px-2.5 py-1 rounded-lg bg-black/60 text-white text-[11px] font-medium">กดปุ่มด้านล่างเพื่อเปิดกล้อง</div>
+              <div id="camHint" class="absolute bottom-2 left-2 right-2 px-2.5 py-1 rounded-lg bg-black/60 text-white text-[11px] font-medium truncate">
+                ${state.activeLensLabel ? escapeHtml(state.activeLensLabel) : 'กดปุ่มด้านล่างเพื่อเปิดกล้องและดึงรายชื่อเลนส์ทั้งหมด'}
+              </div>
             </div>
 
             <div class="grid grid-cols-2 gap-2">
-              <button id="openRearCamBtn" type="button" class="py-2.5 rounded-xl bg-slate-900 text-white text-xs font-bold">เปิดกล้องหลัง</button>
+              <button id="openRearCamBtn" type="button" class="py-2.5 rounded-xl bg-slate-900 text-white text-xs font-bold">เปิดกล้องหลัง / สแกนเลนส์</button>
               <button id="openFrontCamBtn" type="button" class="py-2.5 rounded-xl bg-blue-600 text-white text-xs font-bold">เปิดกล้องหน้า</button>
             </div>
 
+            <div id="lensListBox" class="p-3 rounded-xl bg-slate-50 border border-slate-200"></div>
+            <div id="zoomControlsBox"></div>
+
             <div class="divide-y divide-slate-100 pt-1">
               ${quickRow('camera_front', 'กล้องหน้า (Front)', f, false)}
-              ${quickRow('camera_rear_wide', 'กล้องหลังหลัก (Wide)', r, false)}
-              ${quickRow('camera_rear_aux', 'กล้องหลังเสริม (Ultra/Tele)', aux, true)}
+              ${quickRow('camera_rear_wide', 'กล้องหลังหลัก (Wide 1x)', r, false)}
+              ${quickRow('camera_rear_aux', 'กล้องหลังเสริม (Ultra Wide 0.5x / Telephoto)', aux, true)}
               ${quickRow('camera_flash', 'ไฟแฟลช (เช็กจาก Control Center)', fl, false)}
             </div>
           </div>
           ${navFooter('audio', 'sensors', !f || !r || !aux || !fl)}
         </div>
       `;
-      document.getElementById('openRearCamBtn').addEventListener('click', () => startCamera('environment'));
-      document.getElementById('openFrontCamBtn').addEventListener('click', () => startCamera('user'));
+
+      const video = document.getElementById('camVideo');
+      if (state.cameraStream && video) {
+        video.srcObject = state.cameraStream;
+        video.play().catch(() => {});
+      }
+      renderCameraControlsOnly();
+
+      document.getElementById('openRearCamBtn').addEventListener('click', () => startCamera({ facing: 'environment' }));
+      document.getElementById('openFrontCamBtn').addEventListener('click', () => startCamera({ facing: 'user' }));
       bindQuickRows(main);
       bindNavFooter('audio', 'sensors', () => stopCameraStream());
     }
@@ -911,9 +1188,10 @@
 
             <div class="p-3.5 rounded-xl bg-blue-50/70 border border-blue-200 space-y-2">
               <div class="text-xs font-bold text-blue-900">ตรวจอัตโนมัติผ่าน Safari API</div>
+              <button id="testAllAutoSensorsBtn" type="button" class="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold">แตะครั้งเดียว: ทดสอบ Gyro + GPS อัตโนมัติ</button>
               <div class="grid grid-cols-2 gap-2">
-                <button id="testMotionBtn" type="button" class="py-2 rounded-lg bg-blue-600 text-white text-xs font-bold">ทดสอบ Gyro / Accel</button>
-                <button id="testGpsBtn" type="button" class="py-2 rounded-lg bg-blue-600 text-white text-xs font-bold">ทดสอบ GPS</button>
+                <button id="testMotionBtn" type="button" class="py-2 rounded-lg bg-white border border-blue-200 text-blue-700 text-xs font-bold">เฉพาะ Gyro / Accel</button>
+                <button id="testGpsBtn" type="button" class="py-2 rounded-lg bg-white border border-blue-200 text-blue-700 text-xs font-bold">เฉพาะ GPS</button>
               </div>
               ${state.gyroSample ? `<div class="text-[11px] text-blue-800">Motion: ${state.gyroSample}</div>` : ''}
               ${state.gpsSample ? `<div class="text-[11px] text-blue-800">GPS: ${state.gpsSample}</div>` : ''}
@@ -934,6 +1212,10 @@
           ${navFooter('camera', 'cosmetic', !allRequiredDone)}
         </div>
       `;
+      document.getElementById('testAllAutoSensorsBtn').addEventListener('click', () => {
+        testGyroAndAccel();
+        testGps();
+      });
       document.getElementById('testMotionBtn').addEventListener('click', testGyroAndAccel);
       document.getElementById('testGpsBtn').addEventListener('click', testGps);
       bindQuickRows(main);
